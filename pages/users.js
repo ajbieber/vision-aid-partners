@@ -1,5 +1,4 @@
 import Navigation from "./navigation/Navigation";
-import { getSession } from "next-auth/react";
 import { allUsers, allHospitalRoles, readUser } from "@/pages/api/user";
 import { findAllHospital } from "@/pages/api/hospital";
 import Router from "next/router";
@@ -7,42 +6,46 @@ import { Table } from "react-bootstrap";
 import { FormControl, Select, MenuItem, Input, Typography, FormLabel } from "@mui/material";
 import { createMenu } from "@/constants/globalFunctions";
 import { useState } from "react";
+import { getSession, withPageAuthRequired } from '@auth0/nextjs-auth0';
 
-export async function getServerSideProps(ctx) {
-  const session = await getSession(ctx);
-  if (session == null) {
-    console.log("session is null");
+export const getServerSideProps = withPageAuthRequired({
+  async getServerSideProps(ctx) {
+    const session = await getSession(ctx.req, ctx.res);
+    if (session === null) {
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        },
+      };
+    }
+
+    const { user } = session;
+    const userIsAdmin = user['https://visionaid.org/roles'].includes('Admin');
+    if (
+      !userIsAdmin &&
+      (user.hospitalRole.length == 0 || user.hospitalRole[0].admin != true)
+    ) {
+      console.log("user admin is null or is not a manager of hospital");
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        },
+      };
+    }
+
     return {
-      redirect: {
-        destination: "/",
-        permanent: false,
+      props: {
+        user: user,
+        hospitals: await findAllHospital(),
+        users: await allUsers(),
+        roles: await allHospitalRoles(),
+        error: null,
       },
     };
   }
-  const user = await readUser(session.user.email);
-  if (
-    user.admin == null &&
-    (user.hospitalRole.length == 0 || user.hospitalRole[0].admin != true)
-  ) {
-    console.log("user admin is null or is not a manager of hospital");
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
-  }
-
-  return {
-    props: {
-      user: user,
-      hospitals: await findAllHospital(),
-      users: await allUsers(),
-      roles: await allHospitalRoles(),
-      error: null,
-    },
-  };
-}
+});
 
 function Users(props) {
   const [hosp, setHosp] = useState([]);
@@ -225,9 +228,9 @@ function Users(props) {
   }
 
   let hospitalList = [];
-  for (const hRole of props.user.hospitalRole) {
-    hospitalList.push(hRole.hospitalId);
-  }
+  // for (const hRole of props.user.hospitalRole) {
+  //   hospitalList.push(hRole.hospitalId);
+  // }
 
   let usersList = [];
   for (let i = 0; i < props.users.length; i++) {
@@ -262,6 +265,7 @@ function Users(props) {
       }
     }
     if (
+      props.user.hospitalRole &&
       props.user.hospitalRole.length != 0 &&
       props.user.hospitalRole.hospitalId != hospitalId
     ) {
