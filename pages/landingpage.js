@@ -1,5 +1,5 @@
 
-function  LandingPage({ user } = props) {
+function  LandingPage() {
     
     return (
         <div>

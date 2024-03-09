@@ -30,23 +30,23 @@ export default function Home(props) {
       {user && roles.length == 0 && (
         <strong>Please ask an admin to add you as user!</strong>
       )}
-      <LandingPage user={user}></LandingPage>
+      <LandingPage></LandingPage>
     </Layout>
   );
 }
 
 
-export async function getServerSideProps(ctx) {
-  const session = await getSession(ctx.req, ctx.res);
+// export async function getServerSideProps(ctx) {
+//   const session = await getSession(ctx.req, ctx.res);
 
-  // User hasn't logged in yet
-  if (!session) {
-    return { props: {} }
-  }
+//   // User hasn't logged in yet
+//   if (!session) {
+//     return { props: {} }
+//   }
 
-  const { user, idToken } = session;
-  const idTokenDecoded = jwtDecode(idToken);
-  user.isAdmin = idTokenDecoded['https://visionaid.org/roles'].includes('Admin');
-  user.roles = idTokenDecoded['https://visionaid.org/roles'];
-  return { props: { user: user } };
-}
+//   const { user, idToken } = session;
+//   const idTokenDecoded = jwtDecode(idToken);
+//   user.isAdmin = idTokenDecoded['https://visionaid.org/roles'].includes('Admin');
+//   user.roles = idTokenDecoded['https://visionaid.org/roles'];
+//   return { props: { user: user } };
+// }

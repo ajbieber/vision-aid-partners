@@ -1,6 +1,5 @@
 // This function gets called at build time
 import { readUser } from "./api/user";
-import { getSession } from "next-auth/react";
 import { readBeneficiaryMirror } from "@/pages/api/beneficiaryMirror";
 import { findAllHospital } from "@/pages/api/hospital";
 import { v4 as uuidv4 } from "uuid";
@@ -9,39 +8,42 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import Navigation from "./navigation/Navigation";
 import moment from "moment";
+import { getSession, withPageAuthRequired } from '@auth0/nextjs-auth0'
 
 // http://localhost:3000/beneficiaryinformation
-export async function getServerSideProps(ctx) {
-  const session = await getSession(ctx);
-  if (session == null) {
-    console.log("session is null");
+export const getServerSideProps = withPageAuthRequired({
+  async getServerSideProps(ctx) {
+    const session = await getSession(ctx.req, ctx.res);
+    if (session == null) {
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        },
+      };
+    }
+    const { user } = session;
+    const userIsAdmin = user['https://visionaid.org/roles'].includes('Admin');
+    if (!userIsAdmin && user.hospitalRole == null) {
+      console.log("user admin is not null or added to a hospital");
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        },
+      };
+    }
     return {
-      redirect: {
-        destination: "/",
-        permanent: false,
+      props: {
+        beneficiaryName: ctx.query.beneficiaryName,
+        user: user,
+        requiredBeneficiaryFields: await readBeneficiaryMirror(),
+        hospitals: await findAllHospital(),
+        error: null,
       },
     };
   }
-  const user = await readUser(session.user.email);
-  if (user.admin == null && user.hospitalRole == null) {
-    console.log("user admin is not null or added to a hospital");
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
-  }
-  return {
-    props: {
-      beneficiaryName: ctx.query.beneficiaryName,
-      user: user,
-      requiredBeneficiaryFields: await readBeneficiaryMirror(),
-      hospitals: await findAllHospital(),
-      error: null,
-    },
-  };
-}
+});
 
 function RequiredFields(props) {
   const router = useRouter();
