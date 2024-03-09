@@ -1,7 +1,8 @@
 import '../styles/globals.css'
 import '../styles/vaPartner.css'
 import 'bootstrap/dist/css/bootstrap.css'
-import {SessionProvider} from "next-auth/react"
+// import {SessionProvider} from "next-auth/react"
+import { UserProvider } from '@auth0/nextjs-auth0/client';
 import { Inter } from '@next/font/google'
 import { useEffect } from "react";
 import '../styles/LandingPage.css'
@@ -25,11 +26,11 @@ export default function MyApp({ Component, pageProps }) {
         <title>https://vision-aid-partners-spring-2024.vercel.app/</title>
         <meta name="description" content="vision-aid partners" />
       </Head>
-      <SessionProvider session={pageProps.session}>
+      <UserProvider>
         <main className={`${inter.variable} font-sans`}>
           <Component {...pageProps} />
         </main>
-      </SessionProvider>
+      </UserProvider>
     </>
   );
 }

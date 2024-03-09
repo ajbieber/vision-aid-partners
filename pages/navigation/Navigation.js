@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { signIn, signOut } from "next-auth/react";
 
+
 function Navigation({ user } = props) {
   const router = useRouter();
   let role = "";
@@ -141,13 +142,22 @@ function Navigation({ user } = props) {
         )}
         {!user && (
           <div className="left-auto-margin column-center">
-            <button
+            {/* <button
               type="button"
               className="btn btn-sm btn-light"
               onClick={() => signIn()}
             >
               Sign in
-            </button>
+            </button> */}
+            <Link href="/api/auth/login" legacyBehavior>
+              <a
+                className={`nav-link custom-link ${
+                  router.pathname === "/teaminfo"
+                }`}
+              >
+                Login
+              </a>
+            </Link>
           </div>
         )}
         {/* </div> */}
