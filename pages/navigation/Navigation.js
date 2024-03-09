@@ -6,14 +6,31 @@ import { signIn, signOut } from "next-auth/react";
 function Navigation({ user } = props) {
   const router = useRouter();
   let role = "";
+
+  // Parse the user roles from Auth0
   if (user) {
-    role = user.admin
-      ? "admin"
-      : user.hospitalRole[0].admin
-      ? "manager"
-      : user.hospitalRole
-      ? "professional"
-      : "invalid";
+    const userRoles = user['https://visionaid.org/roles'];
+
+    if (userRoles.includes("Admin")) {
+      role = "admin"
+    }
+    else if (userRoles.includes("Manager")) {
+      role = "manager"
+    }
+    else if (userRoles.includes("Professional")) {
+      role = "professional"
+    }
+    else {
+      role = "invalid"
+    }
+  
+    // role = user.admin
+    //   ? "admin"
+    //   : user.hospitalRole[0].admin
+    //   ? "manager"
+    //   : user.hospitalRole
+    //   ? "professional"
+    //   : "invalid";
   }
 
   return (
@@ -128,15 +145,9 @@ function Navigation({ user } = props) {
             </small>
             <br />
             <div className="text-align-right">
-              <button
-                type="button"
-                className="btn btn-sm btn-light"
-                onClick={() => {
-                  signOut();
-                }}
-              >
-                Sign out
-              </button>
+              <Link href="/api/auth/logout" legacyBehavior>
+                  Logout
+              </Link>
             </div>
           </div>
         )}

@@ -19,10 +19,15 @@ export default function Home(props) {
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>{error.message}</div>;
 
+  let roles = [];
+  if (user) {
+    roles = user['https://visionaid.org/roles'];
+  }
+
   return (
     <Layout>
       <Navigation user={user} />
-      {user && (
+      {user && roles.length == 0 && (
         <strong>Please ask an admin to add you as user!</strong>
       )}
       <LandingPage user={user}></LandingPage>
@@ -42,5 +47,6 @@ export async function getServerSideProps(ctx) {
   const { user, idToken } = session;
   const idTokenDecoded = jwtDecode(idToken);
   user.isAdmin = idTokenDecoded['https://visionaid.org/roles'].includes('Admin');
-  return { props: user };
+  user.roles = idTokenDecoded['https://visionaid.org/roles'];
+  return { props: { user: user } };
 }
