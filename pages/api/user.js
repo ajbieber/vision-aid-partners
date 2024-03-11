@@ -1,4 +1,11 @@
 import prisma from "client";
+import { ManagementClient } from "auth0";
+
+const managementClient = new ManagementClient({
+  domain: 'dev-edn8nssry67zy267.us.auth0.com',
+  clientId: '1G7uNHh8gOEKAaBRLblJXrvVS0l8dmKV',
+  clientSecret: 'LdoMdMiY6R4hFj5uK6WwLYh3S6j1cLcCfgCMcYlCuRVP9tbN1M1gA2VcwlZuAdGL',
+});
 
 export default async function handler(req, res) {
   if (req.method === "POST") {
@@ -73,12 +80,15 @@ export async function readUser(email) {
 }
 
 export async function allUsers() {
-  return prisma.user.findMany({
-    include: {
-      hospitalRole: true,
-      admin: true,
-    },
-  });
+  const results = await  managementClient.users.getAll();
+  console.log(results.data);
+  return results.data;
+  // return prisma.user.findMany({
+  //   include: {
+  //     hospitalRole: true,
+  //     admin: true,
+  //   },
+  // });
 }
 
 export async function allHospitalRoles() {
