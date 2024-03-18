@@ -5,6 +5,7 @@ import { useState } from "react";
 import SearchBar from "./components/SearchBar";
 import UserList from "./components/UserList";
 import Navigation from "./navigation/Navigation";
+import Layout from './components/layout';
 import { useRouter } from "next/router";
 import { getSession, withPageAuthRequired } from '@auth0/nextjs-auth0'
 
@@ -19,7 +20,6 @@ export const getServerSideProps = withPageAuthRequired({
         },
       };
     }
-
     return {
       props: {
         user: session.user,
@@ -95,7 +95,8 @@ function HomePage(props) {
   };
 
   return (
-    <div>
+    <Layout>
+    <div class="content">
       <Navigation user={props.user} />
       <div className="container">
         <h1 className="text-center mt-4 mb-4">Search / Register</h1>
@@ -135,6 +136,7 @@ function HomePage(props) {
       </div>
       <br />
     </div>
+    </Layout>
   );
 }
 

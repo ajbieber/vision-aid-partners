@@ -30,7 +30,7 @@ export default function Home(props) {
       {user && roles.length == 0 && (
         <strong>Please ask an admin to add you as user!</strong>
       )}
-      <LandingPage></LandingPage>
+      <LandingPage user={props.user}></ LandingPage>
     </Layout>
   );
 }

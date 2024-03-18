@@ -6,6 +6,7 @@ import { Table } from "react-bootstrap";
 import { FormControl, Select, MenuItem, Input, Typography, FormLabel } from "@mui/material";
 import { createMenu } from "@/constants/globalFunctions";
 import { useState } from "react";
+<<<<<<< HEAD
 import { getSession, withPageAuthRequired } from '@auth0/nextjs-auth0';
 
 export const getServerSideProps = withPageAuthRequired({
@@ -34,6 +35,10 @@ export const getServerSideProps = withPageAuthRequired({
         },
       };
     }
+=======
+import Layout from './components/layout';
+
+>>>>>>> main
 
     return {
       props: {
@@ -299,7 +304,8 @@ function Users(props) {
     );
   }
   return (
-    <div>
+    <Layout>
+    <div class="content">
       <Navigation user={props.user} />
       <div className="row">
         <div className="offset-md-1 col-md-4">
@@ -428,6 +434,7 @@ function Users(props) {
       </div>
       <br />
     </div>
+    </Layout>
   );
 }
 

@@ -64,9 +64,20 @@ function Navigation({ user } = props) {
           </button>
         </div>
         <div>
-          {user && role != "invalid" && (
-            <div className="collapse navbar-collapse" id="navbarNav">
-              <ul className="navbar-nav">
+          <div className="collapse navbar-collapse" id="navbarNav">
+            <ul className="navbar-nav">
+              <li className="nav-item p-4">
+                <Link href="/teaminfo" legacyBehavior>
+                  <a
+                    className={`nav-link custom-link ${
+                      router.pathname === "/teaminfo" ? "active" : ""
+                    }`}
+                  >
+                    Team Info
+                  </a>
+                </Link>
+              </li>
+              {user && role != "invalid" && (
                 <li className="nav-item p-4">
                   <Link href="/beneficiary" legacyBehavior>
                     <a
@@ -78,6 +89,8 @@ function Navigation({ user } = props) {
                     </a>
                   </Link>
                 </li>
+              )}
+              {user && role != "invalid" && (
                 <li className="nav-item p-4">
                   <Link href="/reports" legacyBehavior>
                     <a
@@ -89,60 +102,47 @@ function Navigation({ user } = props) {
                     </a>
                   </Link>
                 </li>
-                {/* don't display if technician */}
-                {(role === "admin" || role === "manager") && (
-                  <li className="nav-item p-4">
-                    <Link href="/users" legacyBehavior>
-                      <a
-                        className={`nav-link custom-link ${
-                          router.pathname === "/users" ? "active" : ""
-                        }`}
-                      >
-                        Users
-                      </a>
-                    </Link>
-                  </li>
-                )}
-                {/* display only if admin */}
-                {role === "admin" && (
-                  <li className="nav-item p-4">
-                    <Link href="/requiredfields" legacyBehavior>
-                      <a
-                        className={`nav-link custom-link ${
-                          router.pathname === "/requiredfields" ? "active" : ""
-                        }`}
-                      >
-                        Configuration
-                      </a>
-                    </Link>
-                  </li>
-                )}
-              </ul>
-            </div>
-          )}
-          {!user && (
-            <div className="right auto-margin column-center">
-              <ul className="navbar-nav">
+              )}
+              {/* don't display if technician */}
+              {user && role != "invalid" && (role === "admin" || role === "manager") && (
                 <li className="nav-item p-4">
-                  <Link href="/teaminfo" legacyBehavior>
+                  <Link href="/users" legacyBehavior>
                     <a
                       className={`nav-link custom-link ${
-                        router.pathname === "/teaminfo" ? "active" : ""
+                        router.pathname === "/users" ? "active" : ""
                       }`}
                     >
-                      Team Info
+                      Users
                     </a>
                   </Link>
                 </li>
-              </ul>
-            </div>
-          )}
+              )}
+              {/* display only if admin */}
+              {user && role != "invalid" && role === "admin" && (
+                <li className="nav-item p-4">
+                  <Link href="/requiredfields" legacyBehavior>
+                    <a
+                      className={`nav-link custom-link ${
+                        router.pathname === "/requiredfields" ? "active" : ""
+                      }`}
+                    >
+                      Configuration
+                    </a>
+                  </Link>
+                </li>
+              )}
+            </ul>
+          </div>
         </div>
         {user && (
           <div className="left-auto-margin column">
             <small className="top display text-light">
               Signed in as: {user.email} ({role.toUpperCase()})
             </small>
+            <small hidden className="user-id">
+              user.id:{user.id}
+            </small>
+
             <br />
             <div className="text-align-right">
               <Link href="/api/auth/logout" legacyBehavior>
@@ -171,7 +171,6 @@ function Navigation({ user } = props) {
             </Link>
           </div>
         )}
-        {/* </div> */}
       </div>
 
       <style jsx>{`
