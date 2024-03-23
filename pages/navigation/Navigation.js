@@ -8,29 +8,14 @@ function Navigation({ user } = props) {
   let role = "";
 
   // Parse the user roles from Auth0
-  if (user) {
-    const userRoles = user['https://visionaid.org/roles'];
-
-    if (userRoles.includes("Admin")) {
-      role = "admin"
-    }
-    else if (userRoles.includes("Manager")) {
-      role = "manager"
-    }
-    else if (userRoles.includes("Professional")) {
-      role = "professional"
-    }
-    else {
-      role = "invalid"
-    }
-  
-    // role = user.admin
-    //   ? "admin"
-    //   : user.hospitalRole[0].admin
-    //   ? "manager"
-    //   : user.hospitalRole
-    //   ? "professional"
-    //   : "invalid";
+  if (user) {  
+    role = user.admin
+      ? "admin"
+      : user.hospitalRole[0].admin
+      ? "manager"
+      : user.hospitalRole
+      ? "professional"
+      : "invalid";
   }
 
   return (

@@ -1,5 +1,6 @@
 import prisma from "client";
 import { ManagementClient } from "auth0";
+import { use } from "react";
 
 const managementClient = new ManagementClient({
   domain: 'dev-edn8nssry67zy267.us.auth0.com',
@@ -9,7 +10,7 @@ const managementClient = new ManagementClient({
 
 export default async function handler(req, res) {
   if (req.method === "POST") {
-    return await addData(req, res);
+    return await createUser(req, res);
   } else if (req.method == "GET") {
     return await readData(req, res);
   } else if (req.method == "DELETE") {
@@ -18,6 +19,41 @@ export default async function handler(req, res) {
     return res
       .status(405)
       .json({ message: "Method not allowed", success: false });
+  }
+}
+
+/**
+ * Creates a user in Auth0, stored in the defaul Usernmae/Password database.
+ * Returns the essential user attributes. 
+ * 
+ * @param req 
+ * @param res 
+ */
+async function createUser(req, res) {
+  const body = req.body;
+  const userObject = {
+    email: body.email,
+    app_metadata: {
+      "va_partners": {
+        hospitalRole: {},
+        admin: body.admin || false,
+      }
+    },
+    name: body.name,
+    password: body.password,
+    connection: "Username-Password-Authentication"
+  }
+
+  try {
+    const response = await managementClient.users.create(userObject);
+    return res.status(200).json({
+      email: response.data.email,
+      name: response.data.name,
+      hospitalRole: response.data.app_metadata.va_partners.hospitalRole
+    }, { success: true });
+  }
+  catch (error) {
+    return res.status(500).json({ error: `Failed to create user with error: ${error.message}` });
   }
 }
 
@@ -79,48 +115,26 @@ export async function readUser(email) {
   });
 }
 
+/**
+ * Retrieves all users from Auth0.
+ * @returns {Promise}
+ */
 export async function allUsers() {
-  const results = await  managementClient.users.getAll();
-  console.log(results.data);
-  return results.data;
-  // return prisma.user.findMany({
-  //   include: {
-  //     hospitalRole: true,
-  //     admin: true,
-  //   },
-  // });
+  // Retrieve all the users in the username/password connection
+  const results = await managementClient.users.getAll({
+    q: "identities.connection:Username-Password-Authentication"
+  });
+
+  return results.data.map((user) => { return {
+    email: user.email,
+    name: user.name,
+    admin: user.app_metadata.admin || false,
+    hospitalRole: user.app_metadata.hospitalRole || [],
+  }});
 }
 
 export async function allHospitalRoles() {
   return prisma.hospitalRole.findMany();
-}
-
-async function addData(req, res) {
-  const body = req.body;
-  const create = {
-    data: {
-      email: body.email,
-    },
-    include: {
-      hospitalRole: true,
-    },
-  };
-  console.log(
-    "Request body " +
-      JSON.stringify(body) +
-      " create value " +
-      JSON.stringify(create)
-  );
-
-  try {
-    const newEntry = await prisma.user.create(create);
-    return res.status(200).json(newEntry, { success: true });
-  } catch (error) {
-    console.log("Request error " + error);
-    res
-      .status(500)
-      .json({ error: "Error adding user" + error, success: false });
-  }
 }
 
 async function deleteData(req, res) {

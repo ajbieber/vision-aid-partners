@@ -21,7 +21,7 @@ export default function Home(props) {
 
   let roles = [];
   if (user) {
-    roles = user['https://visionaid.org/roles'];
+    roles = user['https://vapartners.org/roles'];
   }
 
   return (
@@ -46,7 +46,7 @@ export default function Home(props) {
 
 //   const { user, idToken } = session;
 //   const idTokenDecoded = jwtDecode(idToken);
-//   user.isAdmin = idTokenDecoded['https://visionaid.org/roles'].includes('Admin');
-//   user.roles = idTokenDecoded['https://visionaid.org/roles'];
+//   user.isAdmin = idTokenDecoded['https://vapartners.org/roles'].includes('Admin');
+//   user.roles = idTokenDecoded['https://vapartners.org/roles'];
 //   return { props: { user: user } };
 // }

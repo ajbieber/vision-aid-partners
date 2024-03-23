@@ -23,7 +23,7 @@ export const getServerSideProps = withPageAuthRequired({
       };
     }
     const { user } = session;
-    const userIsAdmin = user['https://visionaid.org/roles'].includes('Admin');
+    const userIsAdmin = user['https://vapartners.org/roles'].includes('Admin');
     if (!userIsAdmin && user.hospitalRole == null) {
       console.log("user admin is not null or added to a hospital");
       return {
