@@ -108,9 +108,65 @@ function RequiredFields(props) {
     setConfirmDelete(true);
   };
 
-  const handleSaveChanges = () => {
-    // Handle saving changes
-    handleClose();
+  // POST - for creating
+  // PATCH - for updating
+  // DELETE - for delete
+  const handleSaveChanges = async () => {
+    try {
+      if (editMode) {
+        // Edit mode, so make a PATCH request to update the existing post
+        const response = await fetch('/api/beneficiaryMirror', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: title,
+            content: content,
+          }),
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to update post');
+        }
+  
+        const updatedPostData = await response.json();
+  
+        // Update the posts state with the updated post data
+        const updatedPosts = posts.map((post) =>
+          post.id === updatedPostData.id ? updatedPostData : post
+        );
+        setPosts(updatedPosts);
+      } else {
+        // Not in edit mode, so make a POST request to create a new post
+        const response = await fetch('/api/beneficiaryMirror', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: title,
+            content: content,
+          }),
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to create post');
+        }
+  
+        const postData = await response.json();
+  
+        // Update the posts state with the new post data
+        // ... to create new array including all elements of existing posts and add to postData at end
+        setPosts([...posts, postData]);
+      }
+  
+      // Close the modal
+      handleClose();
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      // Handle error (e.g., show an error message)
+    }
   };
 
   function removeExtraField(fieldId) {
