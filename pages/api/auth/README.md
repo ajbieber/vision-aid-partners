@@ -4,7 +4,7 @@ The VA Partners application has its entire authentication and authorization syst
 Auth0. The current plan we have setup through Auth0 is completely free, and does not require a
 credit card to be on file. As of writing this documentation, the free plan offers 7,500 users (more
 that enough for this application), and the majority of the same features that the paid plan offers.
-If you are interested in pricing, you can find details here: [](https://auth0.com/pricing).
+If you are interested in pricing, you can find details here: [https://auth0.com/pricing](https://auth0.com/pricing).
 
 ### User Management
 

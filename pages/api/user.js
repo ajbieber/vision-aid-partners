@@ -5,8 +5,8 @@ import { getSession } from '@auth0/nextjs-auth0';
 
 const managementClient = new ManagementClient({
   domain: 'dev-edn8nssry67zy267.us.auth0.com',
-  clientId: '1G7uNHh8gOEKAaBRLblJXrvVS0l8dmKV',
-  clientSecret: 'LdoMdMiY6R4hFj5uK6WwLYh3S6j1cLcCfgCMcYlCuRVP9tbN1M1gA2VcwlZuAdGL',
+  clientId: process.env['AUTH0_MANAGEMENT_CLIENT_ID'],
+  clientSecret: process.env['AUTH0_MANAGEMENT_CLIENT_SECRET'],
 });
 
 export default async function handler(req, res) {
