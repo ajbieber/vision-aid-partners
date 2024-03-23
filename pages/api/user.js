@@ -1,6 +1,7 @@
 import prisma from "client";
 import { ManagementClient } from "auth0";
 import { use } from "react";
+import { getSession } from '@auth0/nextjs-auth0';
 
 const managementClient = new ManagementClient({
   domain: 'dev-edn8nssry67zy267.us.auth0.com',
@@ -14,7 +15,7 @@ export default async function handler(req, res) {
   } else if (req.method == "GET") {
     return await readData(req, res);
   } else if (req.method == "DELETE") {
-    return await deleteData(req, res);
+    return await deleteUser(req, res);
   } else {
     return res
       .status(405)
@@ -137,11 +138,35 @@ export async function allHospitalRoles() {
   return prisma.hospitalRole.findMany();
 }
 
-async function deleteData(req, res) {
-  const deleteConfirmation = await prisma.user.delete({
-    where: {
-      id: req.body.id,
-    },
-  });
-  return res.status(200).json(deleteConfirmation, { success: true });
+
+/**
+ * Deletes a user from Auth0 by their user ID.
+ * @returns 204 No Content
+ */
+async function deleteUser(req, res) {
+  await managementClient.users.delete(req.body.id);
+  return res.status(204);
+}
+
+/**
+ * Extracts the users details from the session object
+ * @param ctx 
+ * @returns Null if the session is null, else user details
+ */
+export async function getUserFromSession(ctx) {
+  const session = await getSession(ctx.req, ctx.res);
+
+  // Session not active, redirect user to homepage
+  if (session === null) {
+    return null;
+  }
+
+  const userFromSession = session.user;
+  const userMetadata = userFromSession['https://vapartners.org/app_metadata'];
+  return {
+    email: userFromSession.email,
+    name: userFromSession.name,
+    admin: (userMetadata.va_partners.admin !== undefined) ? userMetadata.va_partners.admin : false,
+    hospitalRole: userMetadata.va_partners.hospitalRole
+  };
 }

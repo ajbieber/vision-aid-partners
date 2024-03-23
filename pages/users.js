@@ -23,8 +23,8 @@ export const getServerSideProps = withPageAuthRequired({
       };
     }
 
+    // Define the user from the session
     const userFromSession = session.user;
-    console.log(userFromSession);
     const userMetadata = userFromSession['https://vapartners.org/app_metadata'];
     const user = {
       email: userFromSession.email,
@@ -297,7 +297,7 @@ function Users(props) {
       <tr>
         <td>{data.name}</td>
         <td>{data.email}</td>
-        {props.user.admin != undefined ?
+        {props.user.admin != unde ?
         (admin ? <td style={{color: "green"}}>&#10004;</td> : <td style={{color: "red"}}>&#10008;</td>)
         : <></>}
         {manager ? <td style={{color: "green"}}>&#10004;</td> : <td style={{color: "red"}}>&#10008;</td>}
