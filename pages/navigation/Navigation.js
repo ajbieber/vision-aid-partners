@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { signIn, signOut } from "next-auth/react";
+import Image from 'next/image';
+import logo from 'public/images/vision-aid-logo.webp';
 
-
-function Navigation({ user } = props) {
+function Navigation(props) {
+  const { user } = props;
   const router = useRouter();
   let role = "";
 
@@ -28,8 +30,8 @@ function Navigation({ user } = props) {
         <div className="p-2">
           <Link href="/" legacyBehavior>
             <a className="navbar-brand p-2">
-              <img
-                src="/vision-aid-logo.jpeg"
+              <Image
+                src={logo}
                 alt="Logo"
                 height="80"
                 width="80"

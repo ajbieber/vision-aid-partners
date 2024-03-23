@@ -268,7 +268,7 @@ function Users(props) {
             }
           });
         }
-        hospital = hospitalNames.slice(0, -2);;
+        hospital = hospitalNames.slice(0, -2);
       }
     }
     if (
