@@ -134,7 +134,12 @@ function Navigation(props) {
             <br />
             <div className="text-align-right">
               <Link href="/api/auth/logout" legacyBehavior>
-                  Logout
+                <button
+                  type="button"
+                  className="btn btn-sm btn-light"
+                >
+                  Sign out
+                </button>
               </Link>
             </div>
           </div>
@@ -142,18 +147,12 @@ function Navigation(props) {
         {!user && (
           <div className="left-auto-margin column-center">
             <Link href="/api/auth/login" legacyBehavior>
-              <a
-                className={`nav-link custom-link ${
-                  router.pathname === "/teaminfo"
-                }`}
+              <button
+                type="button"
+                className="btn btn-sm btn-light"
               >
-                <button
-                  type="button"
-                  className="btn btn-sm btn-light"
-                >
-                  Sign in
-                </button>
-              </a>
+                Sign in
+              </button>
             </Link>
           </div>
         )}
