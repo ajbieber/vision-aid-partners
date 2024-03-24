@@ -17,6 +17,37 @@ function  LandingPage(props) {
             <br></br>
             <br></br>
             <br></br>
+            <div>
+                <b>Post Title 1</b>
+                <br></br>
+                <span>Post Content 1</span>
+                <br></br>
+                <span>Date: March 23, 2024</span>
+                <br></br>
+                <br></br>
+                <br></br>
+                <b>Post Title 2</b>
+                <br></br>
+                <span>Post Content 2</span>
+                <br></br>
+                <span>Date: March 23, 2024</span>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                More stories of success..
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                Thanks!
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+            </div>
                 <b> Vision-Aid and OMSCS collaboration</b>
                 <br></br>
                 <br></br>
