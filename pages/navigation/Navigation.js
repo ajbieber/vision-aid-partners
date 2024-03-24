@@ -10,12 +10,13 @@ function Navigation(props) {
   let role = "";
 
   // Parse the user roles from Auth0
-  if (user) {  
-    role = user.admin
+  if (user) {
+    const metadata = user["https://vapartners.org/app_metadata"]["va_partners"];
+    role = metadata.admin
       ? "admin"
-      : user.hospitalRole[0].admin
+      : metadata.hospitalRole[0].admin
       ? "manager"
-      : user.hospitalRole
+      : metadata.hospitalRole
       ? "professional"
       : "invalid";
   }
