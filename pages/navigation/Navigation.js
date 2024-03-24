@@ -140,20 +140,18 @@ function Navigation(props) {
         )}
         {!user && (
           <div className="left-auto-margin column-center">
-            {/* <button
-              type="button"
-              className="btn btn-sm btn-light"
-              onClick={() => signIn()}
-            >
-              Sign in
-            </button> */}
             <Link href="/api/auth/login" legacyBehavior>
               <a
                 className={`nav-link custom-link ${
                   router.pathname === "/teaminfo"
                 }`}
               >
-                Login
+                <button
+                  type="button"
+                  className="btn btn-sm btn-light"
+                >
+                  Sign in
+                </button>
               </a>
             </Link>
           </div>
