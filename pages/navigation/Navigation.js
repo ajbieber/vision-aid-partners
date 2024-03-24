@@ -5,18 +5,18 @@ import Image from 'next/image';
 import logo from 'public/images/vision-aid-logo.webp';
 
 function Navigation(props) {
+  console.log(props);
   const { user } = props;
   const router = useRouter();
   let role = "";
 
   // Parse the user roles from Auth0
   if (user) {
-    const metadata = user["https://vapartners.org/app_metadata"]["va_partners"];
-    role = metadata.admin
+    role = user.admin
       ? "admin"
-      : metadata.hospitalRole[0].admin
+      : user.hospitalRole[0].admin
       ? "manager"
-      : metadata.hospitalRole
+      : user.hospitalRole
       ? "professional"
       : "invalid";
   }

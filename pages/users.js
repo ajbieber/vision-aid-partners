@@ -297,7 +297,7 @@ function Users(props) {
       <tr>
         <td>{data.name}</td>
         <td>{data.email}</td>
-        {props.user.admin != unde ?
+        {props.user.admin ?
         (admin ? <td style={{color: "green"}}>&#10004;</td> : <td style={{color: "red"}}>&#10008;</td>)
         : <></>}
         {manager ? <td style={{color: "green"}}>&#10004;</td> : <td style={{color: "red"}}>&#10008;</td>}
