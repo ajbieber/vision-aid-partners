@@ -7,12 +7,13 @@ import UserList from "./components/UserList";
 import Navigation from "./navigation/Navigation";
 import Layout from './components/layout';
 import { useRouter } from "next/router";
-import { getSession, withPageAuthRequired } from '@auth0/nextjs-auth0'
+import { withPageAuthRequired } from '@auth0/nextjs-auth0'
+import { getUserFromSession } from '@/pages/api/user';
 
 export const getServerSideProps = withPageAuthRequired({
   async getServerSideProps(ctx) {
-    const session = await getSession(ctx.req, ctx.res);
-    if (session == null) {
+    const user = await getUserFromSession(ctx);
+    if (user === null) {
       return {
         redirect: {
           destination: "/",
@@ -20,10 +21,9 @@ export const getServerSideProps = withPageAuthRequired({
         },
       };
     }
+
     return {
-      props: {
-        user: session.user,
-      },
+      props: { user },
     };
   }
 });
