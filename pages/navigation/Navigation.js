@@ -1,11 +1,9 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { signIn, signOut } from "next-auth/react";
 import Image from 'next/image';
 import logo from 'public/images/vision-aid-logo.webp';
 
 function Navigation(props) {
-  console.log(props);
   const { user } = props;
   const router = useRouter();
   let role = "";

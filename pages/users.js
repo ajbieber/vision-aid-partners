@@ -1,20 +1,20 @@
 import Navigation from "./navigation/Navigation";
-import { allUsers, allHospitalRoles, readUser } from "@/pages/api/user";
+import { allUsers, allHospitalRoles, getUserFromSession } from "@/pages/api/user";
 import { findAllHospital } from "@/pages/api/hospital";
 import Router from "next/router";
 import { Table } from "react-bootstrap";
 import { FormControl, Select, MenuItem, Input, Typography, FormLabel } from "@mui/material";
 import { createMenu } from "@/constants/globalFunctions";
 import { useState } from "react";
-import { getSession, withPageAuthRequired } from '@auth0/nextjs-auth0';
+import { withPageAuthRequired } from '@auth0/nextjs-auth0';
 import Layout from './components/layout';
 import Modal from './components/Modal';
 import { Form } from 'react-bootstrap';
 
 export const getServerSideProps = withPageAuthRequired({
   async getServerSideProps(ctx) {
-    const session = await getSession(ctx.req, ctx.res);
-    if (session === null) {
+    const user = await getUserFromSession(ctx);
+    if (user === null) {
       return {
         redirect: {
           destination: "/",
@@ -22,16 +22,6 @@ export const getServerSideProps = withPageAuthRequired({
         },
       };
     }
-
-    // Define the user from the session
-    const userFromSession = session.user;
-    const userMetadata = userFromSession['https://vapartners.org/app_metadata'];
-    const user = {
-      email: userFromSession.email,
-      name: userFromSession.name,
-      admin: (userMetadata.va_partners.admin !== undefined) ? userMetadata.va_partners.admin : false,
-      hospitalRole: userMetadata.va_partners.hospitalRole
-    };
 
     if (
       !user.admin &&
