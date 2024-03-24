@@ -76,11 +76,11 @@ function RequiredFields(props) {
   const [selectedPost, setSelectedPost] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const posts = [
+  const [posts, setPosts] = useState([
     { id: 1, title: 'Post 1', content: 'Content 1', date: '2022-03-08' },
     { id: 2, title: 'Post 2', content: 'Content 2', date: '2022-03-09' },
     { id: 3, title: 'Post 3', content: 'Content 3', date: '2022-03-07' },
-  ];
+  ]);
 
   const handleShow = () => {
     setShowModal(true);
@@ -108,9 +108,70 @@ function RequiredFields(props) {
     setConfirmDelete(true);
   };
 
-  const handleSaveChanges = () => {
-    // Handle saving changes
-    handleClose();
+// POST - for creating
+  // PATCH - for updating
+  // DELETE - for delete
+  // 'Update' and 'Save Changes' button
+  const handleSaveChanges = async () => {
+    try {
+      if (editMode) {
+        // Edit mode, so make a PATCH request to update the existing post
+        const response = await fetch('/api/beneficiaryMirror', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: title,
+            content: content,
+          }),
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to update post');
+        }
+  
+        const updatedPostData = await response.json();
+  
+        // Update the posts state with the updated post data
+        const updatedPosts = posts.map((post) =>
+          post.id === updatedPostData.id ? updatedPostData : post
+        );
+        setPosts(updatedPosts);
+      } else {
+        // Not in edit mode, so make a POST request to create a new post
+        const response = await fetch('/api/beneficiaryMirror', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: posts.length + 1,
+            title: title,
+            content: content,
+            date: new Date().toISOString().slice(0, 10), // Current date in yyyy-mm-dd format
+          }),
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to create post');
+        }
+  
+        const postData = await response.json();
+  
+        // Update the posts state with the new post data
+        // ... to create new array including all elements of existing posts and add to postData at end
+        setPosts([...posts, postData]);
+      }
+  
+      // Close the modal
+      handleClose();
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      // Handle error (e.g., show an error message)
+    }
+      // Set editMode to false after saving changes
+      setEditMode(false);
   };
 
   function removeExtraField(fieldId) {
