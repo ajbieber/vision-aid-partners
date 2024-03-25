@@ -50,6 +50,7 @@ async function createUser(req, res) {
     return res.status(200).json({
       email: response.data.email,
       name: response.data.name,
+      admin: response.data.app_metadata.va_partners.admin,
       hospitalRole: response.data.app_metadata.va_partners.hospitalRole
     }, { success: true });
   }
