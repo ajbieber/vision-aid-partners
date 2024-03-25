@@ -126,11 +126,12 @@ export async function allUsers() {
     q: "identities.connection:Username-Password-Authentication"
   });
 
-  return results.data.map((user) => { return {
+  return results.data.map((user) => {
+    return {
     email: user.email,
     name: user.name,
-    admin: user.app_metadata.admin || false,
-    hospitalRole: user.app_metadata.hospitalRole || [],
+    admin: user.app_metadata.va_partners.admin || false,
+    hospitalRole: user.app_metadata.va_partners.hospitalRole || [],
   }});
 }
 
