@@ -33,7 +33,7 @@ export const getServerSideProps = withPageAuthRequired({
       };
     }
 
-    if (user.admin == null) {
+    if (!user.admin) {
       return {
         redirect: {
           destination: "/",
@@ -41,6 +41,7 @@ export const getServerSideProps = withPageAuthRequired({
         },
       };
     }
+    
     return {
       props: {
         user: user,
