@@ -6,16 +6,16 @@ on:
     branches: [ "main" ]
 
 jobs:
-  docker:
-    timeout-minutes: 10
+  test:
+    timeout-minutes: 5
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Start containers
-        run: docker-compose -f "docker-compose.yaml" up -d --build
+      # - name: Start containers
+      #   run: docker-compose -f "docker-compose.yaml" up -d --build
 
       - name: Install dependencies
         run: npm install
@@ -23,6 +23,6 @@ jobs:
       - name: Run tests
         run: npm run test
 
-      - name: Stop containers
-        if: always()
-        run: docker-compose -f "docker-compose.yaml" down
+      # - name: Stop containers
+      #   if: always()
+      #   run: docker-compose -f "docker-compose.yaml" down

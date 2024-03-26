@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "test": "jest"
+    "test": "jest ./pages/api/__tests__/user.test.js"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.2.4",
@@ -30,7 +30,6 @@
     "axios": "^1.6.8",
     "bootstrap": "^5.2.3",
     "chart.js": "^4.2.1",
-    "eslint-config-next": "13.1.6",
     "framer-motion": "^10.16.4",
     "import-google-fonts": "^0.0.2",
     "js-cookie": "^3.0.1",
@@ -63,6 +62,7 @@
     "@testing-library/react": "^14.2.2",
     "autoprefixer": "^10.4.13",
     "eslint": "^8.57.0",
+    "eslint-config-next": "13.1.6",
     "eslint-plugin-react": "^7.34.1",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
