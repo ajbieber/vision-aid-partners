@@ -24,8 +24,8 @@ export default function Home(props) {
     };
   }
 
-  const userHasNoRoles = formattedUser.hospitalRole.length == 0;
-  const userIsNotAdmin = !formattedUser.admin;
+  const userHasNoRoles = formattedUser && formattedUser.hospitalRole.length == 0;
+  const userIsNotAdmin = formattedUser && !formattedUser.admin;
 
   return (
     <Layout>
