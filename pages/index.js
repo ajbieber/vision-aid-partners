@@ -1,4 +1,4 @@
-import { Inter } from "@next/font/google";
+import { Inter } from "next/font/google";
 import Navigation from "./navigation/Navigation";
 import Layout from './components/layout';
 import  LandingPage from "./landingpage.js";

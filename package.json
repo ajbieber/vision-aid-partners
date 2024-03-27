@@ -21,7 +21,6 @@
     "@mui/icons-material": "^5.14.16",
     "@mui/material": "^5.14.10",
     "@mui/styled-engine-sc": "^5.12.0",
-    "@next/font": "13.1.6",
     "@nextui-org/react": "^2.1.13",
     "@prisma/client": "^5.11.0",
     "@tailwindcss/forms": "^0.5.3",
@@ -71,5 +70,10 @@
   },
   "prisma": {
     "seed": "node prisma/seed.js"
+  },
+  "browser": {
+    "fs": false,
+    "path": false,
+    "os": false
   }
 }
