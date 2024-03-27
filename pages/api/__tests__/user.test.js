@@ -91,7 +91,7 @@ describe('User API Tests', () => {
       name: 'Test User',
       email: 'testuser123@test.com',
       admin: false,
-      hospitalRole: [ { id: 1, admin: true }]
+      hospitalRole: [ { hospitalId: 1, admin: true } ]
     };
 
     mockCreate.mockImplementationOnce(() => {
