@@ -8,7 +8,7 @@ import p3 from 'public/images/p3.webp';
 function  LandingPage(props) {
     return (
         <div>
-            <div className={"scroller"}>
+            <div>
             <br></br>
             <br></br>
             <br></br>
