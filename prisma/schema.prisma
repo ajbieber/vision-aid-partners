@@ -341,5 +341,5 @@ model Feedback {
   datetime_recorded DateTime
   rating            Int
   comment           String?
-  email             String
+  email             String?
 }
