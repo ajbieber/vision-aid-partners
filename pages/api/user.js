@@ -36,7 +36,9 @@ async function createUser(req, res) {
     email: body.email,
     app_metadata: {
       "va_partners": {
-        hospitalRole: {},
+        hospitalRole: [
+          { hospitalId: 1, admin: body.admin }
+        ],
         admin: body.admin || false,
       }
     },
