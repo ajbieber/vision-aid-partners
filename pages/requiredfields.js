@@ -1,69 +1,59 @@
 // This function gets called at build time
-import { readUser } from "./api/user";
+import { getUserFromSession } from "@/pages/api/user";
 import { Table } from "react-bootstrap";
-import { getSession } from "next-auth/react";
 import { readBeneficiaryMirror } from "@/pages/api/beneficiaryMirror";
 import { v4 as uuidv4 } from "uuid";
 import Router from "next/router";
 import Navigation from "./navigation/Navigation";
-import { findAllHospital, findAllHospitalsHistory } from "@/pages/api/hospital";
-import TrainingForm from "@/pages/components/TrainingForm";
+import { findAllHospitalsHistory } from "@/pages/api/hospital";
 import { readMobileTrainingMirror } from "@/pages/api/mobileTrainingMirror";
 import { readComputerTrainingMirror } from "@/pages/api/computerTrainingMirror";
 import { readOrientationMobilityTrainingMirror } from "@/pages/api/orientationMobilityTrainingMirror";
 import { readVisionEnhancementMirror } from "@/pages/api/visionEnhancementMirror";
 import { readComprehensiveLowVisionEvaluationMirror } from "@/pages/api/comprehensiveLowVisionEvaluationMirror";
 import { readCounsellingEducationMirror } from "@/pages/api/counsellingEducationMirror";
-import { ChevronDown, ChevronRight, Trash } from "react-bootstrap-icons";
+import { Trash } from "react-bootstrap-icons";
 import { useState } from "react";
 import { getCounsellingType } from "@/pages/api/counsellingType";
 import { getTrainingTypes } from "@/pages/api/trainingType";
 import { getTrainingSubTypes } from "@/pages/api/trainingSubType";
 import { Modal, Button, Form } from 'react-bootstrap';
+import { getSession, withPageAuthRequired } from '@auth0/nextjs-auth0';
 import Layout from './components/layout';
 
-// http://localhost:3000/requiredfields
-export async function getServerSideProps(ctx) {
-  const session = await getSession(ctx);
-  if (session == null) {
-    console.log("session is null");
+export const getServerSideProps = withPageAuthRequired({
+  async getServerSideProps(ctx) {
+    const user = await getUserFromSession(ctx);
+    if (user == null || !user.admin) {
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        },
+      };
+    }
+
     return {
-      redirect: {
-        destination: "/",
-        permanent: false,
+      props: {
+        user: user,
+        requiredBeneficiaryFields: await readBeneficiaryMirror(),
+        requiredMobileTraining: await readMobileTrainingMirror(),
+        requiredComputerTraining: await readComputerTrainingMirror(),
+        requiredOrientationMobilityTraining:
+          await readOrientationMobilityTrainingMirror(),
+        requiredVisionEnhancement: await readVisionEnhancementMirror(),
+        requiredComprehensiveLowVisionEvaluation:
+          await readComprehensiveLowVisionEvaluationMirror(),
+        requiredCounsellingEducation: await readCounsellingEducationMirror(),
+        hospitals: await findAllHospitalsHistory(),
+        counselingTypeList: await getCounsellingType(),
+        trainingTypeList: await getTrainingTypes(),
+        trainingSubTypeList: await getTrainingSubTypes(),
+        error: null,
       },
     };
   }
-  const user = await readUser(session.user.email);
-  if (user.admin == null) {
-    console.log("user admin is null");
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
-  }
-  return {
-    props: {
-      user: user,
-      requiredBeneficiaryFields: await readBeneficiaryMirror(),
-      requiredMobileTraining: await readMobileTrainingMirror(),
-      requiredComputerTraining: await readComputerTrainingMirror(),
-      requiredOrientationMobilityTraining:
-        await readOrientationMobilityTrainingMirror(),
-      requiredVisionEnhancement: await readVisionEnhancementMirror(),
-      requiredComprehensiveLowVisionEvaluation:
-        await readComprehensiveLowVisionEvaluationMirror(),
-      requiredCounsellingEducation: await readCounsellingEducationMirror(),
-      hospitals: await findAllHospitalsHistory(),
-      counselingTypeList: await getCounsellingType(),
-      trainingTypeList: await getTrainingTypes(),
-      trainingSubTypeList: await getTrainingSubTypes(),
-      error: null,
-    },
-  };
-}
+});
 
 function RequiredFields(props) {
   const [section, setSection] = useState("");

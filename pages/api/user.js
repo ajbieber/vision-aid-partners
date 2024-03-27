@@ -1,16 +1,63 @@
 import prisma from "client";
+import { ManagementClient } from "auth0";
+import { use } from "react";
+import { getSession } from '@auth0/nextjs-auth0';
+
+const managementClient = new ManagementClient({
+  domain: 'dev-edn8nssry67zy267.us.auth0.com',
+  clientId: process.env['AUTH0_MANAGEMENT_CLIENT_ID'],
+  clientSecret: process.env['AUTH0_MANAGEMENT_CLIENT_SECRET'],
+});
 
 export default async function handler(req, res) {
   if (req.method === "POST") {
-    return await addData(req, res);
+    return await createUser(req, res);
   } else if (req.method == "GET") {
     return await readData(req, res);
   } else if (req.method == "DELETE") {
-    return await deleteData(req, res);
+    return await deleteUser(req, res);
   } else {
     return res
       .status(405)
       .json({ message: "Method not allowed", success: false });
+  }
+}
+
+/**
+ * Creates a user in Auth0, stored in the defaul Usernmae/Password database.
+ * Returns the essential user attributes. 
+ * 
+ * @param req 
+ * @param res 
+ */
+async function createUser(req, res) {
+  const body = req.body;
+  const userObject = {
+    email: body.email,
+    app_metadata: {
+      "va_partners": {
+        hospitalRole: [
+          { hospitalId: 1, admin: body.admin }
+        ],
+        admin: body.admin || false,
+      }
+    },
+    name: body.name,
+    password: body.password,
+    connection: "Username-Password-Authentication"
+  }
+
+  try {
+    const response = await managementClient.users.create(userObject);
+    return res.status(200).json({
+      email: response.data.email,
+      name: response.data.name,
+      admin: response.data.app_metadata.va_partners.admin,
+      hospitalRole: response.data.app_metadata.va_partners.hospitalRole
+    }, { success: true });
+  }
+  catch (error) {
+    return res.status(500).json({ error: `Failed to create user with error: ${error.message}` });
   }
 }
 
@@ -72,52 +119,64 @@ export async function readUser(email) {
   });
 }
 
+/**
+ * Retrieves all users from Auth0.
+ * @returns {Promise}
+ */
 export async function allUsers() {
-  return prisma.user.findMany({
-    include: {
-      hospitalRole: true,
-      admin: true,
-    },
+  // Retrieve all the users in the username/password connection
+  const results = await managementClient.users.getAll({
+    q: "identities.connection:Username-Password-Authentication"
   });
+
+  return results.data.map((user) => {
+    return {
+    email: user.email,
+    name: user.name,
+    admin: user.app_metadata.va_partners.admin || false,
+    hospitalRole: user.app_metadata.va_partners.hospitalRole || [],
+  }});
 }
 
 export async function allHospitalRoles() {
   return prisma.hospitalRole.findMany();
 }
 
-async function addData(req, res) {
-  const body = req.body;
-  const create = {
-    data: {
-      email: body.email,
-    },
-    include: {
-      hospitalRole: true,
-    },
-  };
-  console.log(
-    "Request body " +
-      JSON.stringify(body) +
-      " create value " +
-      JSON.stringify(create)
-  );
 
-  try {
-    const newEntry = await prisma.user.create(create);
-    return res.status(200).json(newEntry, { success: true });
-  } catch (error) {
-    console.log("Request error " + error);
-    res
-      .status(500)
-      .json({ error: "Error adding user" + error, success: false });
-  }
+/**
+ * Deletes a user from Auth0 by their user ID.
+ * @returns 204 No Content
+ */
+async function deleteUser(req, res) {
+  await managementClient.users.delete(req.body.id);
+  return res.status(204);
 }
 
-async function deleteData(req, res) {
-  const deleteConfirmation = await prisma.user.delete({
-    where: {
-      id: req.body.id,
-    },
-  });
-  return res.status(200).json(deleteConfirmation, { success: true });
+/**
+ * Extracts the users details from the session object
+ * @param ctx 
+ * @returns Null if the session is null, else user details
+ */
+export async function getUserFromSession(ctx) {
+  const session = await getSession(ctx.req, ctx.res);
+
+  // Session not active, redirect user to homepage
+  if (session === null) {
+    return null;
+  }
+
+  const userFromSession = session.user;
+  const userMetadata = userFromSession['https://vapartners.org/app_metadata'];
+
+  // Error logic
+  if (!userMetadata || !userMetadata.va_partners) {
+    throw new Error("User metadata is incorrectly formatted");
+  }
+
+  return {
+    email: userFromSession.email,
+    name: userFromSession.name,
+    admin: (userMetadata.va_partners.admin !== undefined) ? userMetadata.va_partners.admin : false,
+    hospitalRole: userMetadata.va_partners.hospitalRole
+  };
 }

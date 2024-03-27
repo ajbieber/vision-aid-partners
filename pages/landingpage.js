@@ -8,7 +8,7 @@ import p3 from 'public/images/p3.webp';
 function  LandingPage(props) {
     return (
         <div>
-            <div className={"scroller"}>
+            <div>
             <br></br>
             <br></br>
             <br></br>
@@ -26,7 +26,7 @@ function  LandingPage(props) {
                 <br></br>
                 <br></br>
                 <div>
-                    {/* <div className={"box box1"}> <img src="https://visionaid.org/wp-content/uploads/2024/01/DSC_9437-1536x1028.jpg" alt="Vision-Aid’s Journey of Empowerment at Sankara Nethralaya, Chennai" /> </div> */}
+                    {/* <div className={"box box1"}> <img src="https://vapartners.org/wp-content/uploads/2024/01/DSC_9437-1536x1028.jpg" alt="Vision-Aid’s Journey of Empowerment at Sankara Nethralaya, Chennai" /> </div> */}
                     <div className="img-grid">
                         <Image
                             src={p1}
@@ -45,10 +45,10 @@ function  LandingPage(props) {
                     <br></br>
                     <br></br>
                     <br></br>
-                    {/* <div className={"box box1"}> <img src="https://visionaid.org/wp-content/uploads/2024/02/image.jpeg" alt="About the center in SN Chennai" /> </div>   */}
+                    {/* <div className={"box box1"}> <img src="https://vapartners.org/wp-content/uploads/2024/02/image.jpeg" alt="About the center in SN Chennai" /> </div>   */}
                     <div className="img-grid">
                         <Image
-                            // src="https://visionaid.org/wp-content/uploads/2024/02/image.jpeg"
+                            // src="https://vapartners.org/wp-content/uploads/2024/02/image.jpeg"
                             src={p2}
                             width={300}
                             height={200}
@@ -66,7 +66,7 @@ function  LandingPage(props) {
                     <br></br>
                     <br></br>
                     <br></br>
-                    {/* <div className={"box box1"}> <img src="https://visionaid.org/wp-content/uploads/2024/01/image_2024-01-31_192032823.png" /> </div>   */}
+                    {/* <div className={"box box1"}> <img src="https://vapartners.org/wp-content/uploads/2024/01/image_2024-01-31_192032823.png" /> </div>   */}
                     <div className="img-grid">
                         <Image
                             src={p3}

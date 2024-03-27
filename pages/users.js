@@ -1,54 +1,61 @@
 import Navigation from "./navigation/Navigation";
-import { getSession } from "next-auth/react";
-import { allUsers, allHospitalRoles, readUser } from "@/pages/api/user";
+import { allUsers, allHospitalRoles, getUserFromSession } from "@/pages/api/user";
 import { findAllHospital } from "@/pages/api/hospital";
 import Router from "next/router";
 import { Table } from "react-bootstrap";
 import { FormControl, Select, MenuItem, Input, Typography, FormLabel } from "@mui/material";
 import { createMenu } from "@/constants/globalFunctions";
 import { useState } from "react";
+import { withPageAuthRequired } from '@auth0/nextjs-auth0';
 import Layout from './components/layout';
+import Modal from './components/Modal';
+import { Form } from 'react-bootstrap';
 
+export const getServerSideProps = withPageAuthRequired({
+  async getServerSideProps(ctx) {
+    const user = await getUserFromSession(ctx);
+    if (user === null) {
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        },
+      };
+    }
 
-export async function getServerSideProps(ctx) {
-  const session = await getSession(ctx);
-  if (session == null) {
-    console.log("session is null");
+    if (
+      !user.admin &&
+      (user.hospitalRole.length == 0 || user.hospitalRole[0].admin != true)
+    ) {
+      console.log("user admin is null or is not a manager of hospital");
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        },
+      };
+    }
     return {
-      redirect: {
-        destination: "/",
-        permanent: false,
+      props: {
+        user: user,
+        hospitals: await findAllHospital(),
+        users: await allUsers(),
+        roles: await allHospitalRoles(),
+        error: null,
       },
     };
   }
-  const user = await readUser(session.user.email);
-  if (
-    user.admin == null &&
-    (user.hospitalRole.length == 0 || user.hospitalRole[0].admin != true)
-  ) {
-    console.log("user admin is null or is not a manager of hospital");
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
-  }
-
-  return {
-    props: {
-      user: user,
-      hospitals: await findAllHospital(),
-      users: await allUsers(),
-      roles: await allHospitalRoles(),
-      error: null,
-    },
-  };
-}
+});
 
 function Users(props) {
   const [hosp, setHosp] = useState([]);
   const [role, setRole] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+
+  // State attributes for user
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleRoleOption = (e) => {
     setRole(e.target.value);
@@ -76,7 +83,6 @@ function Users(props) {
     // const hospitalElement = document.getElementById("hospitalSelect");
     // console.log(hospitalElement);
     // const hosidx = hospitalElement.selectedIndex;
-    console.log(hosp);
     let hospitalId = [];
     for (const hospital of hosp) {
       if (hospital === "ALL") {
@@ -88,7 +94,6 @@ function Users(props) {
         ));
       }
     }
-    console.log(hospitalId);
     const [user, existed] = await insertUserIfRequiredByEmail(userEmail);
     // let role = document.getElementById("manager").selectedOptions[0].value;
     let roleIsAdmin = role === "Admin";
@@ -128,8 +133,6 @@ function Users(props) {
           if (!existed) deleteUser(user.id);
         }
       } else {
-        console.log("admin " + roleIsHospAdmin);
-        console.log(user.id + ": " + hospitalIdIter + ", " + roleIsHospAdmin);
         if (user.admin != null || roleIsAdmin) {
           alert("An admin can't be attached to a single hospital");
           if (!existed) deleteUser(user.id);
@@ -170,11 +173,9 @@ function Users(props) {
     let existed = false;
     var json = await response.json();
     if (json != null && json.error == null) {
-      console.log("User found in db " + JSON.stringify(json));
       existed = true;
       return [json, existed];
     }
-    console.log("User not found adding to db " + email);
     response = await fetch("/api/user", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -183,8 +184,6 @@ function Users(props) {
       }),
     });
     json = await response.json();
-    console.log("user " + JSON.stringify(json));
-    console.log([json, existed]);
     return [json, existed];
   };
 
@@ -227,14 +226,13 @@ function Users(props) {
   }
 
   let hospitalList = [];
-  for (const hRole of props.user.hospitalRole) {
-    hospitalList.push(hRole.hospitalId);
-  }
+  // for (const hRole of props.user.hospitalRole) {
+  //   hospitalList.push(hRole.hospitalId);
+  // }
 
   let usersList = [];
   for (let i = 0; i < props.users.length; i++) {
     const data = props.users[i];
-    console.log(data);
     var admin;
     var hospital, hospitalNames = "";
     var hospitalId = null;
@@ -264,6 +262,7 @@ function Users(props) {
       }
     }
     if (
+      props.user.hospitalRole &&
       props.user.hospitalRole.length != 0 &&
       props.user.hospitalRole.hospitalId != hospitalId
     ) {
@@ -286,9 +285,9 @@ function Users(props) {
 
     usersList.push(
       <tr>
-        <td>{data.id}</td>
+        <td>{data.name}</td>
         <td>{data.email}</td>
-        {props.user.admin != null ?
+        {props.user.admin ?
         (admin ? <td style={{color: "green"}}>&#10004;</td> : <td style={{color: "red"}}>&#10008;</td>)
         : <></>}
         {manager ? <td style={{color: "green"}}>&#10004;</td> : <td style={{color: "red"}}>&#10008;</td>}
@@ -296,143 +295,207 @@ function Users(props) {
       </tr>
     );
   }
+
+  const handleSubmitModal = async function(something) {
+    const response = await fetch("/api/user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: email,
+        name: name,
+        password: password
+      }),
+    });
+
+    setModalOpen(false);
+
+    // Reset attributes
+    setEmail("");
+    setPassword("");
+    setName("");
+  };
+
+  const handleCloseModal = async function() {
+    setModalOpen(false);
+  };
+
   return (
     <Layout>
-    <div className="content">
-      <Navigation user={props.user} />
-      <div className="row">
-        <div className="offset-md-1 col-md-4">
-          <br />
-          <strong>Add User To Hospital</strong>
-          <br />
-          {/* <br /> */}
-          <div className="container m-4">
+      <div className="content">
+        <Navigation user={props.user} />
+        <div className="row">
+          <div>
+            <button onClick={() => setModalOpen(true)} >Create User</button>
+          </div>
+          <div className="offset-md-1 col-md-4">
             <br />
+            <strong>Add User To Hospital</strong>
             <br />
-            <form action="#" method="POST" onSubmit={(e) => addUser(e)}>
-              <table className="row">
-                <tr className="row">
-                  <td
-                    htmlFor="manager"
-                    className="col-md-5 flex-container-vertical"
-                  >
-                    Role
-                  </td>
-                  <td className="col-md-7">
-                    <FormControl fullWidth size="small">
-                      <Select
-                        value={role}
-                        onChange={(e) => handleRoleOption(e)}
-                      >
-                        {createMenu(roleOptions, false)}
-                      </Select>
-                    </FormControl>
-                  </td>
-                </tr>
-                <br/>
-                <tr className="row">
-                  <td
-                    htmlFor="hospitalSelect"
-                    className="col-md-5 flex-container-vertical"
-                  >
-                    Select a hospital
-                  </td>
-                  <td className="col-md-7">
-                    <FormControl fullWidth size="small">
-                      {role === "Professional" ?
-                      <Select
-                        value={hosp}
-                        onChange={(e) => setHosp([e.target.value])}
-                      >
-                        {createMenu(hospitalOptions, false)}
-                      </Select>
-                      : (role === "Manager" ?
-                      <Select
-                        value={hosp}
-                        onChange={(e) => setHosp(e.target.value)}
-                        multiple
-                        renderValue={(selected) => selected.join(", ")}
-                      >
-                        {createMenu(hospitalOptions, true, hosp)}
-                      </Select>
-                      :
-                      <Select
-                        value={hosp}
-                        disabled
-                      >
-                        <MenuItem key="ALL" value="ALL">
-                          <Typography align="left">
-                              ALL
-                          </Typography>
-                        </MenuItem>
-                      </Select>
-                      )}
-                    </FormControl>
-                  </td>
-                </tr>
-                <br />
-                <tr className="row padding">
-                  <td htmlFor="email" className="col-md-5 vertical-align">
-                    User Email
-                  </td>
-                  <td className="col-md-7">
-                    <FormControl fullWidth size="small">
-                      <Input id="userEmail" autoComplete="off"></Input>
-                    </FormControl>
-                  </td>
-                </tr>
-              </table>
+            {/* <br /> */}
+            <div className="container m-4">
               <br />
-              <button
-                type="submit"
-                className="btn btn-success border-0 btn-block"
-              >
-                Submit
-              </button>
-            </form>
+              <br />
+              <form action="#" method="POST" onSubmit={(e) => addUser(e)}>
+                <table className="row">
+                  <tr className="row">
+                    <td
+                      htmlFor="manager"
+                      className="col-md-5 flex-container-vertical"
+                    >
+                      Role
+                    </td>
+                    <td className="col-md-7">
+                      <FormControl fullWidth size="small">
+                        <Select
+                          value={role}
+                          onChange={(e) => handleRoleOption(e)}
+                        >
+                          {createMenu(roleOptions, false)}
+                        </Select>
+                      </FormControl>
+                    </td>
+                  </tr>
+                  <br/>
+                  <tr className="row">
+                    <td
+                      htmlFor="hospitalSelect"
+                      className="col-md-5 flex-container-vertical"
+                    >
+                      Select a hospital
+                    </td>
+                    <td className="col-md-7">
+                      <FormControl fullWidth size="small">
+                        {role === "Professional" ?
+                        <Select
+                          value={hosp}
+                          onChange={(e) => setHosp([e.target.value])}
+                        >
+                          {createMenu(hospitalOptions, false)}
+                        </Select>
+                        : (role === "Manager" ?
+                        <Select
+                          value={hosp}
+                          onChange={(e) => setHosp(e.target.value)}
+                          multiple
+                          renderValue={(selected) => selected.join(", ")}
+                        >
+                          {createMenu(hospitalOptions, true, hosp)}
+                        </Select>
+                        :
+                        <Select
+                          value={hosp}
+                          disabled
+                        >
+                          <MenuItem key="ALL" value="ALL">
+                            <Typography align="left">
+                                ALL
+                            </Typography>
+                          </MenuItem>
+                        </Select>
+                        )}
+                      </FormControl>
+                    </td>
+                  </tr>
+                  <br />
+                  <tr className="row padding">
+                    <td htmlFor="email" className="col-md-5 vertical-align">
+                      User Email
+                    </td>
+                    <td className="col-md-7">
+                      <FormControl fullWidth size="small">
+                        <Input id="userEmail" autoComplete="off"></Input>
+                      </FormControl>
+                    </td>
+                  </tr>
+                </table>
+                <br />
+                <button
+                  type="submit"
+                  className="btn btn-success border-0 btn-block"
+                >
+                  Submit
+                </button>
+              </form>
+              <br />
+            </div>
+          </div>
+          {/* <hr style="width: 1px; height: 20px; display: inline-block;"></hr> */}
+          <div className="offset-md-1 col-md-5">
             <br />
+            <strong>List Of Users</strong>
+            <br />
+            <br />
+            <Table striped bordered hover responsive>
+              <thead>
+                <tr>
+                  <th>
+                    <i>Name</i>
+                  </th>
+                  <th>
+                    <i>Email</i>
+                  </th>
+                  {props.user.admin != null ?
+                  <th>
+                    <i>Admin</i>
+                  </th>
+                  :<></>}
+                  <th>
+                    <i>Manager</i>
+                  </th>
+                  <th>
+                    <i>Hospital</i>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>{usersList}</tbody>
+            </Table>
           </div>
         </div>
-        {/* <hr style="width: 1px; height: 20px; display: inline-block;"></hr> */}
-        <div className="offset-md-1 col-md-5">
-          <br />
-          <strong>List Of Users</strong>
-          <br />
-          <br />
-          <Table striped bordered hover responsive>
-            <thead>
-              <tr>
-                <th>
-                  <i>User Id</i>
-                </th>
-                <th>
-                  <i>User Email</i>
-                </th>
-                {props.user.admin != null ?
-                <th>
-                  <i>Admin</i>
-                </th>
-                :<></>}
-                <th>
-                  <i>Manager</i>
-                </th>
-                <th>
-                  <i>Hospital</i>
-                </th>
-              </tr>
-            </thead>
-            <tbody>{usersList}</tbody>
-          </Table>
-        </div>
+        <br />
       </div>
-      <br />
-    </div>
+      <Modal
+        title="Add User"
+        closeText="Cancel"
+        submitText="Submit"
+        open={modalOpen}
+        handleOnSubmit={handleSubmitModal}
+        handleOnClose={handleCloseModal}
+      >
+        <Form>
+          <Form.Group controlId="postName">
+            <Form.Label className="text-left">Name</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group controlId="postEmail">
+            <Form.Label className="text-left">Email</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group controlId="postPassword">
+            <Form.Label className="text-left">Password</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter temporary password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </Form.Group>
+        </Form>
+      </Modal>
     </Layout>
   );
 }
 
 async function deleteUser(userId) {
-  console.log("delete user " + userId);
   const deleteConfirmation = await fetch("/api/user", {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
@@ -443,7 +506,6 @@ async function deleteUser(userId) {
   if (deleteConfirmation.status !== 200) {
     console.log("something went wrong");
   } else {
-    console.log("form submitted successfully !!!");
     Router.reload();
   }
 }
