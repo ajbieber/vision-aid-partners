@@ -1,34 +1,21 @@
 // feedback.js api
-import mysql from 'mysql2/promise';
-
-async function connectToDatabase() {
-  return await mysql.createPool({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE
-  });
-}
+import prisma from "client";
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     const { rating, comments, email } = req.body;
 
     try {
-      const pool = await connectToDatabase();
-      const connection = await pool.getConnection();
+      const feedback = await prisma.feedback.create({
+        data: {
+          datetime_recorded: new Date(),
+          rating: parseInt(rating),
+          comment: comments,
+          email: email || null, // Making email optional
+        },
+      });
 
-      const currentDatetime = new Date();
-
-      const datetime_recorded = currentDatetime.toISOString().slice(0, 19).replace('T', ' ');
-
-      await connection.query(
-        'INSERT INTO Feedback (datetime_recorded, rating, comment, email) VALUES (?, ?, ?, ?)',
-        [datetime_recorded, rating, comments, email]
-      );
-
-      connection.release();
+      console.log('Feedback created:', feedback); // Log the created feedback
 
       res.status(200).json({ message: 'Feedback submitted successfully!' });
     } catch (error) {

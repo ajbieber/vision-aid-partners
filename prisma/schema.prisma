@@ -335,3 +335,11 @@ model Landing_Page {
   user            User @relation(fields: [userId], references: [id])
   userId          Int
 }
+
+model Feedback {
+  id                Int  @id @default(autoincrement())
+  datetime_recorded DateTime
+  rating            Int
+  comment           String?
+  email             String
+}
