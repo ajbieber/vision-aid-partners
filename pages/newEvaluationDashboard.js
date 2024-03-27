@@ -4,7 +4,7 @@ import Head from "next/head";
 import Image from "next/image";
 import Router, { useRouter } from "next/router";
 import { useState, useEffect } from "react";
-import { Inter } from "@next/font/google";
+import { Inter } from "next/font/google";
 import { useSession, signIn, signOut, getSession } from "next-auth/react";
 import TrainingFormCLVE from "./components/TrainingFormCLVE";
 import TrainingForm from "./components/TrainingForm";

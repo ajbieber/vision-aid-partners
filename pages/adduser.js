@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import Navigation from "./navigation/Navigation";
-import { getSession } from "next-auth/react";
-import { readUser } from "./api/user";
+import { getUserFromSession } from "./api/user";
 
 export async function getServerSideProps(ctx) {
-  const session = await getSession(ctx);
-  if (session == null) {
+  const user = await getUserFromSession(ctx);
+  if (user == null) {
     console.log("session is null");
     return {
       redirect: {
@@ -15,7 +14,7 @@ export async function getServerSideProps(ctx) {
       },
     };
   }
-  const user = await readUser(session.user.email);
+  
   return {
     props: {
       user: user,

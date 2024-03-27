@@ -8,10 +8,11 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "test": "npx jest --runInBand"
+    "test": "jest ./pages/api/__tests__/user.test.js"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.2.4",
+    "@auth0/nextjs-auth0": "^3.5.0",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@fontsource/roboto": "^5.0.8",
@@ -20,18 +21,17 @@
     "@mui/icons-material": "^5.14.16",
     "@mui/material": "^5.14.10",
     "@mui/styled-engine-sc": "^5.12.0",
-    "@next-auth/prisma-adapter": "^0.4.4-canary.81",
-    "@next/font": "13.1.6",
     "@nextui-org/react": "^2.1.13",
     "@prisma/client": "^5.11.0",
     "@tailwindcss/forms": "^0.5.3",
+    "auth0": "^4.3.1",
     "axios": "^1.6.8",
     "bootstrap": "^5.2.3",
     "chart.js": "^4.2.1",
-    "eslint-config-next": "13.1.6",
     "framer-motion": "^10.16.4",
     "import-google-fonts": "^0.0.2",
     "js-cookie": "^3.0.1",
+    "jwt-decode": "^4.0.0",
     "moment": "^2.29.4",
     "next": "^13.1.6",
     "next-auth": "^4.19.2",
@@ -56,14 +56,24 @@
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.3",
+    "@testing-library/jest-dom": "^6.4.2",
+    "@testing-library/react": "^14.2.2",
     "autoprefixer": "^10.4.13",
     "eslint": "^8.57.0",
+    "eslint-config-next": "13.1.6",
     "eslint-plugin-react": "^7.34.1",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "postcss": "^8.4.21",
     "prisma": "^5.11.0",
     "tailwindcss": "^3.2.7"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
+  },
+  "browser": {
+    "fs": false,
+    "path": false,
+    "os": false
   }
 }

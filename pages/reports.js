@@ -1,7 +1,4 @@
-import { readUser, allHospitalRoles } from "./api/user";
-import { getSession } from "next-auth/react";
-import { Chart as ChartJS } from "chart.js/auto";
-import { Chart } from "react-chartjs-2";
+import { getUserFromSession, allHospitalRoles } from "@/pages/api/user";
 import { Bar } from "react-chartjs-2";
 import {
   getSummaryForAllHospitals,
@@ -9,20 +6,14 @@ import {
 import { Container } from "react-bootstrap";
 import Navigation from "./navigation/Navigation";
 import Layout from './components/layout';
-import { Table } from "react-bootstrap";
-import Link from "next/link";
 import moment from "moment";
 import { useState, useEffect } from "react";
 import {
   findAllBeneficiary,
 } from "@/pages/api/beneficiary";
-import { CSVLink, CSVDownload } from "react-csv";
 import GraphCustomizer from "./components/GraphCustomizer";
 import { Tab, Tabs, Paper } from "@mui/material";
-// import * as XLSX from "xlsx";
 import XLSX from "xlsx-js-style";
-import { isNotNullEmptyOrUndefined } from "@/constants/globalFunctions";
-import { Orienta } from "@next/font/google";
 import { Download } from "react-bootstrap-icons";
 import { useRouter } from "next/router";
 import {
@@ -32,234 +23,235 @@ import {
   filterTrainingSummaryByDateRange,
   getReportData,
 } from "@/constants/reportFunctions";
+import { withPageAuthRequired } from '@auth0/nextjs-auth0';
 
 // This function is called to load data from the server side.
-export async function getServerSideProps(ctx) {
-  const session = await getSession(ctx);
-  if (session == null) {
-    console.log("session is null");
+export const getServerSideProps = withPageAuthRequired({
+  async getServerSideProps(ctx) {
+    const user = await getUserFromSession(ctx);
+    if (user === null) {
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        },
+      };
+    }
+
+    const getHospitalIdsByUsers = (id, users) => {
+      let hospitalIds = [];
+      for (const user of users ) {
+        if (user.userId === id) {
+          hospitalIds.push(user.hospitalId);
+        }
+      }
+      return hospitalIds;
+    }
+
+    // If it's a non admin user, we only want to show the summary for their hospital
+    const roles = await allHospitalRoles();
+    let hospitalIds;
+    const isAdmin = user.admin != null;
+    if (!isAdmin) {
+      hospitalIds = getHospitalIdsByUsers(user.email, roles);
+    }
+
+    // The following is code to download summary data as a CSV file
+    const beneficiaryListFromAPI = await findAllBeneficiary(isAdmin, hospitalIds);
+
+    let beneficiaryList = [];
+
+    beneficiaryList = beneficiaryListFromAPI.map((beneficiary) => ({
+      mrn: beneficiary.mrn,
+      beneficiaryName: beneficiary.beneficiaryName,
+      hospitalId: beneficiary.hospitalId,
+      dateOfBirth: beneficiary.dateOfBirth,
+      gender: beneficiary.gender,
+      phoneNumber: beneficiary.phoneNumber,
+      education: beneficiary.education,
+      occupation: beneficiary.occupation,
+      districts: beneficiary.districts,
+      state: beneficiary.state,
+      diagnosis: beneficiary.diagnosis,
+      vision: beneficiary.vision,
+      mDVI: beneficiary.mDVI,
+      extraInformation: beneficiary.extraInformation,
+      hospital: beneficiary.hospital,
+      visionEnhancement: beneficiary.Vision_Enhancement,
+      counsellingEducation: beneficiary.Counselling_Education,
+      comprehensiveLowVisionEvaluation:
+        beneficiary.Comprehensive_Low_Vision_Evaluation,
+      lowVisionEvaluation: beneficiary.Low_Vision_Evaluation,
+      training: beneficiary.Training,
+      computerTraining: beneficiary.Computer_Training,
+      mobileTraining: beneficiary.Mobile_Training,
+      orientationMobilityTraining: beneficiary.Orientation_Mobility_Training,
+    }));
+
+    let flatList = [];
+    function flatFields(extraInformation, key) {
+      let flat = {};
+      try {
+        const ex = JSON.parse(extraInformation);
+        for (let i = 0; i < ex.length; i++) {
+          const e = ex[i];
+          flat[(key + "." + i + "." + e.name).replaceAll(",", " ")] =
+            e.value.replaceAll(",", " ");
+        }
+      } catch (e) {
+        return {};
+      }
+      return flat;
+    }
+
+    function flatChildArray(childArray, key) {
+      let flat = {};
+      try {
+        for (let i1 = 0; i1 < childArray.length; i1++) {
+          const child = childArray[i1];
+          for (let i = 0; i < Object.keys(child).length; i++) {
+            const jsonKey = Object.keys(child)[i];
+            flat[(key + "." + i1 + "." + jsonKey).replaceAll(",", " ")] =
+              child[jsonKey] == null
+                ? ""
+                : child[jsonKey].toString().replaceAll(",", " ");
+          }
+        }
+      } catch (e) {
+        return {};
+      }
+      return flat;
+    }
+
+    function appendFlat(appendFrom, appendTo) {
+      Object.keys(appendFrom).forEach((append) => {
+        appendTo[append] = appendFrom[append];
+      });
+    }
+
+    for (const beneficiary of beneficiaryListFromAPI) {
+      const visionEnhancementFlat = flatChildArray(
+        beneficiary.Vision_Enhancement,
+        "visionEnhancement"
+      );
+      const counselingEducationFlat = flatChildArray(
+        beneficiary.Counselling_Education,
+        "counselingEducation"
+      );
+      const comprehensiveLowVisionEvaluationFlat = flatChildArray(
+        beneficiary.Comprehensive_Low_Vision_Evaluation,
+        "comprehensiveLowVisionEvaluation"
+      );
+      const lowVisionEvaluationFlat = flatChildArray(
+        beneficiary.Low_Vision_Evaluation,
+        "lowVisionEvaluation"
+      );
+      const trainingFlat = flatChildArray(beneficiary.Training, "training");
+      const computerTrainingFlat = flatChildArray(
+        beneficiary.Computer_Training,
+        "computerTraining"
+      );
+      const mobileTrainingFlat = flatChildArray(
+        beneficiary.Mobile_Training,
+        "mobileTraining"
+      );
+      const orientationMobilityTrainingFlat = flatChildArray(
+        beneficiary.Orientation_Mobility_Training,
+        "orientationMobilityTraining"
+      );
+      const extraFields = flatFields(
+        beneficiary.extraInformation,
+        "BeneficiaryExtraField"
+      );
+      let flat = {
+        mrn: beneficiary.mrn.replaceAll(",", " "),
+        hospitalName:
+          beneficiary.hospital == null
+            ? ""
+            : beneficiary.hospital.name.replaceAll(",", " "),
+        beneficiaryName:
+          beneficiary.beneficiaryName == null
+            ? ""
+            : beneficiary.beneficiaryName.replaceAll(",", " "),
+        dateOfBirth:
+          beneficiary.dateOfBirth == null
+            ? ""
+            : beneficiary.dateOfBirth.toString().replaceAll(",", " "),
+        gender:
+          beneficiary.gender == null
+            ? ""
+            : beneficiary.gender.replaceAll(",", " "),
+        phoneNumber:
+          beneficiary.phoneNumber == null
+            ? ""
+            : beneficiary.phoneNumber.replaceAll(",", " "),
+        education:
+          beneficiary.education == null
+            ? ""
+            : beneficiary.education.replaceAll(",", " "),
+        occupation:
+          beneficiary.occupation == null
+            ? ""
+            : beneficiary.occupation.replaceAll(",", " "),
+        districts:
+          beneficiary.districts == null
+            ? ""
+            : beneficiary.districts.replaceAll(",", " "),
+        state:
+          beneficiary.state == null ? "" : beneficiary.state.replaceAll(",", " "),
+        diagnosis:
+          beneficiary.diagnosis == null
+            ? ""
+            : beneficiary.diagnosis.replaceAll(",", " "),
+        vision:
+          beneficiary.vision == null
+            ? ""
+            : beneficiary.vision.replaceAll(",", " "),
+        mDVI:
+          beneficiary.mDVI == null ? "" : beneficiary.mDVI.replaceAll(",", " "),
+        rawExtraFields:
+          beneficiary.extraInformation == null
+            ? ""
+            : beneficiary.extraInformation.replaceAll(",", " "),
+        visionEnhancement: JSON.stringify(beneficiary.Vision_Enhancement),
+        counsellingEducation: JSON.stringify(beneficiary.Counselling_Education),
+        comprehensiveLowVisionEvaluation: JSON.stringify(
+          beneficiary.Comprehensive_Low_Vision_Evaluation
+        ),
+        lowVisionEvaluation: JSON.stringify(beneficiary.Low_Vision_Evaluation),
+        training: JSON.stringify(beneficiary.Training),
+        computerTraining: JSON.stringify(beneficiary.Computer_Training),
+        mobileTraining: JSON.stringify(beneficiary.Mobile_Training),
+        orientationMobilityTraining: JSON.stringify(
+          beneficiary.Orientation_Mobility_Training
+        ),
+      };
+      appendFlat(extraFields, flat);
+      appendFlat(visionEnhancementFlat, flat);
+      appendFlat(counselingEducationFlat, flat);
+      appendFlat(comprehensiveLowVisionEvaluationFlat, flat);
+      appendFlat(lowVisionEvaluationFlat, flat);
+      appendFlat(trainingFlat, flat);
+      appendFlat(computerTrainingFlat, flat);
+      appendFlat(mobileTrainingFlat, flat);
+      appendFlat(orientationMobilityTrainingFlat, flat);
+      flatList.push(flat);
+    }
+
+    // We finally return all the data to the page
+    const summary = await getSummaryForAllHospitals(isAdmin, hospitalIds);
+
     return {
-      redirect: {
-        destination: "/",
-        permanent: false,
+      props: {
+        user: user,
+        summary: JSON.parse(JSON.stringify(summary)),
+        beneficiaryList: JSON.parse(JSON.stringify(beneficiaryList)),
+        beneficiaryFlatList: flatList,
+        error: null,
       },
     };
   }
-
-  const getHospitalIdsByUsers = (id, users) => {
-    let hospitalIds = [];
-    for (const user of users ) {
-      if (user.userId === id) {
-        hospitalIds.push(user.hospitalId);
-      }
-    }
-    return hospitalIds;
-  }
-
-  // If it's a non admin user, we only want to show the summary for their hospital
-  const user = await readUser(session.user.email);
-  const roles = await allHospitalRoles();
-  let hospitalIds;
-  const isAdmin = user.admin != null;
-  if (!isAdmin) {
-    hospitalIds = getHospitalIdsByUsers(user.id, roles);
-  }
-
-  // The following is code to download summary data as a CSV file
-  const beneficiaryListFromAPI = await findAllBeneficiary(isAdmin, hospitalIds);
-
-  let beneficiaryList = [];
-
-  beneficiaryList = beneficiaryListFromAPI.map((beneficiary) => ({
-    mrn: beneficiary.mrn,
-    beneficiaryName: beneficiary.beneficiaryName,
-    hospitalId: beneficiary.hospitalId,
-    dateOfBirth: beneficiary.dateOfBirth,
-    gender: beneficiary.gender,
-    phoneNumber: beneficiary.phoneNumber,
-    education: beneficiary.education,
-    occupation: beneficiary.occupation,
-    districts: beneficiary.districts,
-    state: beneficiary.state,
-    diagnosis: beneficiary.diagnosis,
-    vision: beneficiary.vision,
-    mDVI: beneficiary.mDVI,
-    extraInformation: beneficiary.extraInformation,
-    hospital: beneficiary.hospital,
-    visionEnhancement: beneficiary.Vision_Enhancement,
-    counsellingEducation: beneficiary.Counselling_Education,
-    comprehensiveLowVisionEvaluation:
-      beneficiary.Comprehensive_Low_Vision_Evaluation,
-    lowVisionEvaluation: beneficiary.Low_Vision_Evaluation,
-    training: beneficiary.Training,
-    computerTraining: beneficiary.Computer_Training,
-    mobileTraining: beneficiary.Mobile_Training,
-    orientationMobilityTraining: beneficiary.Orientation_Mobility_Training,
-  }));
-
-  let flatList = [];
-  function flatFields(extraInformation, key) {
-    let flat = {};
-    try {
-      const ex = JSON.parse(extraInformation);
-      for (let i = 0; i < ex.length; i++) {
-        const e = ex[i];
-        flat[(key + "." + i + "." + e.name).replaceAll(",", " ")] =
-          e.value.replaceAll(",", " ");
-      }
-    } catch (e) {
-      return {};
-    }
-    return flat;
-  }
-
-  function flatChildArray(childArray, key) {
-    let flat = {};
-    try {
-      for (let i1 = 0; i1 < childArray.length; i1++) {
-        const child = childArray[i1];
-        for (let i = 0; i < Object.keys(child).length; i++) {
-          const jsonKey = Object.keys(child)[i];
-          flat[(key + "." + i1 + "." + jsonKey).replaceAll(",", " ")] =
-            child[jsonKey] == null
-              ? ""
-              : child[jsonKey].toString().replaceAll(",", " ");
-        }
-      }
-    } catch (e) {
-      return {};
-    }
-    return flat;
-  }
-
-  function appendFlat(appendFrom, appendTo) {
-    Object.keys(appendFrom).forEach((append) => {
-      appendTo[append] = appendFrom[append];
-    });
-  }
-
-  for (const beneficiary of beneficiaryListFromAPI) {
-    const visionEnhancementFlat = flatChildArray(
-      beneficiary.Vision_Enhancement,
-      "visionEnhancement"
-    );
-    const counselingEducationFlat = flatChildArray(
-      beneficiary.Counselling_Education,
-      "counselingEducation"
-    );
-    const comprehensiveLowVisionEvaluationFlat = flatChildArray(
-      beneficiary.Comprehensive_Low_Vision_Evaluation,
-      "comprehensiveLowVisionEvaluation"
-    );
-    const lowVisionEvaluationFlat = flatChildArray(
-      beneficiary.Low_Vision_Evaluation,
-      "lowVisionEvaluation"
-    );
-    const trainingFlat = flatChildArray(beneficiary.Training, "training");
-    const computerTrainingFlat = flatChildArray(
-      beneficiary.Computer_Training,
-      "computerTraining"
-    );
-    const mobileTrainingFlat = flatChildArray(
-      beneficiary.Mobile_Training,
-      "mobileTraining"
-    );
-    const orientationMobilityTrainingFlat = flatChildArray(
-      beneficiary.Orientation_Mobility_Training,
-      "orientationMobilityTraining"
-    );
-    const extraFields = flatFields(
-      beneficiary.extraInformation,
-      "BeneficiaryExtraField"
-    );
-    let flat = {
-      mrn: beneficiary.mrn.replaceAll(",", " "),
-      hospitalName:
-        beneficiary.hospital == null
-          ? ""
-          : beneficiary.hospital.name.replaceAll(",", " "),
-      beneficiaryName:
-        beneficiary.beneficiaryName == null
-          ? ""
-          : beneficiary.beneficiaryName.replaceAll(",", " "),
-      dateOfBirth:
-        beneficiary.dateOfBirth == null
-          ? ""
-          : beneficiary.dateOfBirth.toString().replaceAll(",", " "),
-      gender:
-        beneficiary.gender == null
-          ? ""
-          : beneficiary.gender.replaceAll(",", " "),
-      phoneNumber:
-        beneficiary.phoneNumber == null
-          ? ""
-          : beneficiary.phoneNumber.replaceAll(",", " "),
-      education:
-        beneficiary.education == null
-          ? ""
-          : beneficiary.education.replaceAll(",", " "),
-      occupation:
-        beneficiary.occupation == null
-          ? ""
-          : beneficiary.occupation.replaceAll(",", " "),
-      districts:
-        beneficiary.districts == null
-          ? ""
-          : beneficiary.districts.replaceAll(",", " "),
-      state:
-        beneficiary.state == null ? "" : beneficiary.state.replaceAll(",", " "),
-      diagnosis:
-        beneficiary.diagnosis == null
-          ? ""
-          : beneficiary.diagnosis.replaceAll(",", " "),
-      vision:
-        beneficiary.vision == null
-          ? ""
-          : beneficiary.vision.replaceAll(",", " "),
-      mDVI:
-        beneficiary.mDVI == null ? "" : beneficiary.mDVI.replaceAll(",", " "),
-      rawExtraFields:
-        beneficiary.extraInformation == null
-          ? ""
-          : beneficiary.extraInformation.replaceAll(",", " "),
-      visionEnhancement: JSON.stringify(beneficiary.Vision_Enhancement),
-      counsellingEducation: JSON.stringify(beneficiary.Counselling_Education),
-      comprehensiveLowVisionEvaluation: JSON.stringify(
-        beneficiary.Comprehensive_Low_Vision_Evaluation
-      ),
-      lowVisionEvaluation: JSON.stringify(beneficiary.Low_Vision_Evaluation),
-      training: JSON.stringify(beneficiary.Training),
-      computerTraining: JSON.stringify(beneficiary.Computer_Training),
-      mobileTraining: JSON.stringify(beneficiary.Mobile_Training),
-      orientationMobilityTraining: JSON.stringify(
-        beneficiary.Orientation_Mobility_Training
-      ),
-    };
-    appendFlat(extraFields, flat);
-    appendFlat(visionEnhancementFlat, flat);
-    appendFlat(counselingEducationFlat, flat);
-    appendFlat(comprehensiveLowVisionEvaluationFlat, flat);
-    appendFlat(lowVisionEvaluationFlat, flat);
-    appendFlat(trainingFlat, flat);
-    appendFlat(computerTrainingFlat, flat);
-    appendFlat(mobileTrainingFlat, flat);
-    appendFlat(orientationMobilityTrainingFlat, flat);
-    flatList.push(flat);
-  }
-
-  // We finally return all the data to the page
-  const summary = await getSummaryForAllHospitals(isAdmin, hospitalIds);
-
-  return {
-    props: {
-      user: user,
-      summary: JSON.parse(JSON.stringify(summary)),
-      beneficiaryList: JSON.parse(JSON.stringify(beneficiaryList)),
-      beneficiaryFlatList: flatList,
-      error: null,
-    },
-  };
-}
+});
 
 // Graph Options that are constant for all graphs
 const graphOptions = {
