@@ -73,10 +73,10 @@ export default function TeamInfo(props) {
             <a href="https://docs.google.com/forms/d/e/1FAIpQLSek2sc5bzRulLRB4Y1GcieoLc0ThsxphofEv5U6SYoo5SU38w/viewform?usp=sf_link" target="_blank" rel="noopener noreferrer">Peer Review Survey</a>
           </p>            
           <p>
-            <a href="https://vimeo.com/913052661?share=copy" target="_blank" rel="noopener noreferrer">Presentation Video</a>
+            <a href="https://vimeo.com/913052661?share=copy" target="_blank" rel="noopener noreferrer">Initial Presentation Video</a>
           </p>
           <p>
-            {/* <a href="https://github.com/ajbieber/vision-aid-partners" target="_blank" rel="noopener noreferrer">Project GitHub</a> */}
+            <a href="https://vimeo.com/928491799?share=copy" target="_blank" rel="noopener noreferrer">Demo Video</a>
           </p>
         </div>
       </div>
