@@ -224,18 +224,11 @@ async function main() {
     })
     await prisma.landing_Page.create({
         data: {
-            id: 1,
-            // userId: 5,
-            // creationDate: cr_date,
-            // content: "seed_content",
+          id: 1,
+          user: { connect: {  id: 1 } },
+          content: "This is some content",
+          creationDate: new Date(),
         },
-    })
-
-    await prisma.landing_Page.create({
-        id: 2,
-        // userId: 5,
-        // creationDate: cr_date,
-        // content: "seed_content",
     })
 }
 
