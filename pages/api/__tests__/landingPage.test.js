@@ -1,4 +1,3 @@
-const axios = require('axios');
 const apiUrl = 'http://localhost:3000/api/landingPage'; 
 
 describe('Landing Page API Tests', () => {
