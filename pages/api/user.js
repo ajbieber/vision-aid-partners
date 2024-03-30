@@ -1,6 +1,5 @@
 import prisma from "client";
 import { ManagementClient } from "auth0";
-import { use } from "react";
 import { getSession } from '@auth0/nextjs-auth0';
 
 const managementClient = new ManagementClient({
