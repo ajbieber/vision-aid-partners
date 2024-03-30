@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "test": "jest ./pages/api/__tests__/user.test.js"
+    "test": "jest --runInBand --passWithNoTests"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.2.4",
