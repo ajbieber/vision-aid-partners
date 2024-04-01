@@ -1,9 +1,9 @@
 import { useState } from 'react';
 
 export default function SidePanel(props) {
-  const { options, defaultOption, handleSelection } = props;
+  const { options, defaultOption = "", handleSelection } = props;
 
-  const [ selected, setSelected ] = useState((defaultOption) ? defaultOption : options[0]);
+  const [ selected, setSelected ] = useState(defaultOption);
 
   const handleClick = (e) => {
     const selectedOption = e.target.innerText;
