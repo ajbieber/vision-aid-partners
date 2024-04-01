@@ -20,6 +20,8 @@ import { getTrainingSubTypes } from "@/pages/api/trainingSubType";
 import { Modal, Button, Form } from 'react-bootstrap';
 import { getSession, withPageAuthRequired } from '@auth0/nextjs-auth0';
 import Layout from './components/layout';
+import SidePanel from "./components/SidePanel";
+
 
 export const getServerSideProps = withPageAuthRequired({
   async getServerSideProps(ctx) {
@@ -56,7 +58,7 @@ export const getServerSideProps = withPageAuthRequired({
 });
 
 function RequiredFields(props) {
-  const [section, setSection] = useState("");
+  const [section, setSection] = useState("Hospitals");
   const [hospitals, setHospitals] = useState(props.hospitals);
 
   const [showModal, setShowModal] = useState(false);
@@ -65,6 +67,8 @@ function RequiredFields(props) {
   const [editMode, setEditMode] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const sections = ["Hospitals", "Beneficiaries", "Evaluations", "Trainings", "Landing Page"]
 
   const posts = [
     { id: 1, title: 'Post 1', content: 'Content 1', date: '2022-03-08' },
@@ -677,70 +681,9 @@ function RequiredFields(props) {
     <div className="content">
       <Navigation user={props.user} />
       <div className="d-flex flex-row h-100 flex-grow-1">
-        <div className="container col-md-3 m-4 p-4">
-          <div className="p-2">
-            <button
-              className={`w-100 text-align-left ${
-                section === "hospitals"
-                  ? "btn btn-success btn-block active-tab"
-                  : "btn btn-light btn-block"
-              }`}
-              onClick={() => setSection("hospitals")}
-            >
-              Hospitals
-            </button>
-          </div>
-          <div className="p-2">
-            <button
-              className={`w-100 text-align-left ${
-                section === "beneficiaries"
-                  ? "btn btn-success btn-block active-tab"
-                  : "btn btn-light btn-block"
-              }`}
-              onClick={() => setSection("beneficiaries")}
-            >
-              Beneficiaries
-            </button>
-          </div>
-          <div className="p-2">
-            <button
-              className={`w-100 text-align-left ${
-                section === "evaluations"
-                  ? "btn btn-success btn-block active-tab"
-                  : "btn btn-light btn-block"
-              }`}
-              onClick={() => setSection("evaluations")}
-            >
-              Evaluations
-            </button>
-          </div>
-          <div className="p-2">
-            <button
-              className={`w-100 text-align-left ${
-                section === "trainings"
-                  ? "btn btn-success btn-block active-tab"
-                  : "btn btn-light btn-block"
-              }`}
-              onClick={() => setSection("trainings")}
-            >
-              Trainings
-            </button>
-          </div>
-          <div className="p-2">
-            <button
-              className={`w-100 text-align-left ${
-                section === "landing-page"
-                  ? "btn btn-success btn-block active-tab"
-                  : "btn btn-light btn-block"
-              }`}
-              onClick={() => setSection("landing-page")}
-            >
-              Landing Page
-            </button>
-          </div>
-        </div>
+        <SidePanel options={sections} defaultOption="Hospitals" handleSelection={setSection} />
         <div className="col-md-8">
-          {section === "hospitals" && (
+          {section === "Hospitals" && (
             <div className="container m-4 p-4">
               <form action="#" method="POST" onSubmit={(e) => addHospital(e)}>
                 <div className="text-center">
@@ -818,7 +761,7 @@ function RequiredFields(props) {
               <br />
             </div>
           )}
-          {section === "beneficiaries" && (
+          {section === "Beneficiaries" && (
             <div className="container m-4 p-4">
               <form
                 action="#"
@@ -986,7 +929,7 @@ function RequiredFields(props) {
               </form>
             </div>
           )}
-          {section === "evaluations" && (
+          {section === "Evaluations" && (
             <div className="container m-4 p-4">
               <h2 className="text-center mt-4 mb-4">
                 <strong>Other Form Required Fields</strong>
@@ -1327,7 +1270,7 @@ function RequiredFields(props) {
               </div>
             </div>
           )}
-          {section === "trainings" && (
+          {section === "Trainings" && (
             <div className="container mt-4">
               <h2 className="text-center mt-4 mb-4">
                 <strong>Add Types</strong>
@@ -1442,7 +1385,7 @@ function RequiredFields(props) {
               </div>
             </div>
           )}
-          {section === 'landing-page' && (
+          {section === "Landing Page" && (
             <div className="container mt-4">
                 <div className="row">
                   <div className="col text-end" style={{ marginTop: '10px' }}>
