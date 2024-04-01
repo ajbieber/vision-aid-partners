@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 export default function SidePanel(props) {
-  const { options, defaultOption = "", handleSelection } = props;
+  const { options = [], defaultOption = "", handleSelection } = props;
 
   const [ selected, setSelected ] = useState(defaultOption);
 
