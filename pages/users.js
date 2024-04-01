@@ -1,882 +1,513 @@
-// pages/user.js
-import { useState, useEffect } from "react";
-import Router, { useRouter } from "next/router";
-import { getSession } from "next-auth/react";
-import { Pencil, Check2 } from "react-bootstrap-icons";
 import Navigation from "./navigation/Navigation";
-import TrainingForm from "./components/TrainingForm";
-import BeneficiaryServicesTable from "./components/BeneficiaryServicesTable";
-import UserProfileCard from "./components/UserProfileCard";
-import TrainingFormCLVE from "./components/TrainingFormCLVE";
-import { getTrainingTypes } from "@/pages/api/trainingType";
-import { getCounsellingType } from "@/pages/api/counsellingType";
-import { getTrainingSubTypes } from "@/pages/api/trainingSubType";
-import { findAllHospital } from "./api/hospital";
-import { readUser } from "./api/user";
-import ConsentForm from "./components/ConsentForm";
+import { allUsers, allHospitalRoles, getUserFromSession } from "@/pages/api/user";
+import { findAllHospital } from "@/pages/api/hospital";
+import Router from "next/router";
+import { Table } from "react-bootstrap";
+import { FormControl, Select, MenuItem, Input, Typography, FormLabel } from "@mui/material";
+import { createMenu } from "@/constants/globalFunctions";
+import { useState } from "react";
+import { withPageAuthRequired } from '@auth0/nextjs-auth0';
+import Layout from './components/layout';
+import Modal from './components/Modal';
+import { Form } from 'react-bootstrap';
 
-function UserPage(props) {
-  const router = useRouter();
+export const getServerSideProps = withPageAuthRequired({
+  async getServerSideProps(ctx) {
+    const user = await getUserFromSession(ctx);
+    if (user === null) {
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        },
+      };
+    }
 
-  // State variable for form fields
-  const [formData, setFormData] = useState(props.user);
-  const [editableField, setEditableField] = useState("");
+    if (
+      !user.admin &&
+      (user.hospitalRole.length == 0 || user.hospitalRole[0].admin != true)
+    ) {
+      console.log("user admin is null or is not a manager of hospital");
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        },
+      };
+    }
+    return {
+      props: {
+        user: user,
+        hospitals: await findAllHospital(),
+        users: await allUsers(),
+        roles: await allHospitalRoles(),
+        error: null,
+      },
+    };
+  }
+});
 
-  const [mobileTrainingData, setMobileTrainingData] = useState([]);
-  const [trainingData, setTrainingData] = useState([]);
-  const [computerTrainingData, setComputerTrainingData] = useState([]);
-  const [visionTrainingData, setVisionTrainingData] = useState([]);
-  const [
-    comprehensiveLowVisionEvaluationData,
-    setComprehensiveLowVisionEvaluationData,
-  ] = useState([]);
-  const [lowVisionEvaluationData, setLowVisionEvaluationData] = useState([]);
-  const [counsellingEducationData, setCounsellingEducationData] = useState([]);
-  const [orientationMobilityData, setOrientationMobilityData] = useState([]);
-  const [openMobile, setOpenMobile] = useState(false);
-  const [openComputer, setOpenComputer] = useState(false);
-  const [openVision, setOpenVision] = useState(false);
-  const [consentName, setConsentName] = useState("");
+function Users(props) {
+  const [hosp, setHosp] = useState([]);
+  const [role, setRole] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
 
-  useEffect(() => {
-    setMobileTrainingData(props.user.Mobile_Training);
-  }, [props.user.Mobile_Training]);
-  useEffect(() => {
-    setTrainingData(props.user.Training);
-  }, [props.user.Training]);
-  useEffect(() => {
-    setComputerTrainingData(props.user.Computer_Training);
-  }, [props.user.Computer_Training]);
-  useEffect(() => {
-    setVisionTrainingData(props.user.Vision_Enhancement);
-  }, [props.user.Vision_Enhancement]);
-  useEffect(() => {
-    setComprehensiveLowVisionEvaluationData(
-      props.user.Comprehensive_Low_Vision_Evaluation
+  // State attributes for user
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleRoleOption = (e) => {
+    setRole(e.target.value);
+    if (e.target.value === "Admin") {
+      setHosp(["ALL"]);
+    } else {
+      setHosp([]);
+    }
+  };
+
+  const getHospitalIdsByUsers = (id, users) => {
+    let hospitalIds = [];
+    for (const user of users ) {
+      if (user.userId === id) {
+        hospitalIds.push(user.hospitalId);
+      }
+    }
+
+    return hospitalIds;
+  }
+
+  const addUser = async (e) => {
+    e.preventDefault();
+    const userEmail = document.getElementById("userEmail").value;
+    // const hospitalElement = document.getElementById("hospitalSelect");
+    // console.log(hospitalElement);
+    // const hosidx = hospitalElement.selectedIndex;
+    let hospitalId = [];
+    for (const hospital of hosp) {
+      if (hospital === "ALL") {
+        hospitalId = [0];
+        break;
+      } else {
+        hospitalId.push(parseInt(
+          hospital.substring(hospital.indexOf("("), hospital.indexOf(")")).substring(4)
+        ));
+      }
+    }
+    const [user, existed] = await insertUserIfRequiredByEmail(userEmail);
+    // let role = document.getElementById("manager").selectedOptions[0].value;
+    let roleIsAdmin = role === "Admin";
+    let roleIsHospAdmin = role === "Manager";
+
+    let isSuccessful = true;
+    for (const hospitalIdIter of hospitalId) {
+      if (hospitalIdIter === 0) {
+        if (roleIsAdmin) {
+          // add admin in admin table
+          const response = await fetch("/api/admin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: user.id,
+            }),
+          });
+          if (response.status !== 200) {
+            alert("Something went wrong");
+            console.log("something went wrong");
+
+            // remove entry from user table
+            if (!existed) {
+              console.log("Inside admin delete");
+              deleteUser(user.id);
+            }
+          } else {
+            console.log("form submitted successfully !!!");
+            alert("Form submitted success");
+            Router.reload();
+          }
+          return;
+        } else {
+          alert("Please select a hospital");
+
+          // remove entry from user table
+          if (!existed) deleteUser(user.id);
+        }
+      } else {
+        if (user.admin != null || roleIsAdmin) {
+          alert("An admin can't be attached to a single hospital");
+          if (!existed) deleteUser(user.id);
+          return;
+        }
+        const response = await fetch("/api/hospitalRole", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: user.id,
+            hospitalId: hospitalIdIter,
+            admin: roleIsHospAdmin,
+          }),
+        });
+        if (response.status !== 200) {
+          console.log("something went wrong");
+
+          // remove entry from user table
+          if (!existed) deleteUser(user.id);
+        } else {
+          console.log("form submitted successfully !!!");
+        }
+      }
+    }
+    if (isSuccessful) {
+      alert("Form submitted success");
+      Router.reload();
+    } else {
+      alert("Something went wrong");
+    }
+  };
+
+  const insertUserIfRequiredByEmail = async (email) => {
+    var response = await fetch("/api/user?email=" + email, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    let existed = false;
+    var json = await response.json();
+    if (json != null && json.error == null) {
+      existed = true;
+      return [json, existed];
+    }
+    response = await fetch("/api/user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: email,
+      }),
+    });
+    json = await response.json();
+    return [json, existed];
+  };
+
+  let displayAllHospitals = [];
+  props.hospitals.forEach((hospital) => {
+    displayAllHospitals.push(
+      <div>
+        <br />
+        <div>Hospital Name {hospital.name}</div>
+        <div>Hospital Id {hospital.id}</div>
+        <br />
+      </div>
     );
-  }, [props.user.Comprehensive_Low_Vision_Evaluation]);
-  useEffect(() => {
-    setLowVisionEvaluationData(props.user.Low_Vision_Evaluation);
-  }, [props.user.Low_Vision_Evaluation]);
-  useEffect(() => {
-    setCounsellingEducationData(props.user.Counselling_Education);
-  }, [props.user.Counselling_Education]);
-  useEffect(() => {
-    setOrientationMobilityData(props.user.Orientation_Mobility_Training);
-  }, [props.user.Orientation_Mobility_Training]);
+  });
 
   const hospitalOptions = [];
-  for (let i = 0; i < props.hospitals.length; i++) {
-    const hospital = props.hospitals[i];
-    hospitalOptions.push(
-      <option key={hospital.name} value={hospital.id}>
-        {hospital.name} (ID {hospital.id})
-      </option>
-    );
-  }
-
-  const callMe = async (data, url, setter, cur_data) => {
-    data["sessionNumber"] = parseInt(data["sessionNumber"]);
-    // parse date
-    data["date"] = new Date(data["date"]);
-    data["beneficiaryId"] = props.user.mrn;
-    if (data["type"] == "Other" && data["subType"] == null) {
-      data["type"] = data["typeOther"];
-    } else if (data["subType"] == "Other") {
-      data["subType"] = data["subTypeOther"];
+  if (props.user.admin != null) {
+    for (let i = 0; i < props.hospitals.length; i++) {
+      const hospital = props.hospitals[i];
+      hospitalOptions.push(hospital.name + " (ID " + hospital.id + ")");
     }
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-
-    // Handle response from the API
-    if (!response.ok) {
-      alert("An error occurred while saving data. Please try again.");
-    }
-    Router.reload();
-  };
-
-  const handleSubmitMobileTraining = async (data) => {
-    // Submit the MobileTraining data to the API
-    const url = "/api/mobileTraining";
-    callMe(data, url, setMobileTrainingData, mobileTrainingData);
-  };
-
-  const handleSubmitTraining = async (data) => {
-    // Submit the MobileTraining data to the API
-    const url = "/api/training";
-    callMe(data, url, setTrainingData, trainingData);
-  };
-
-  const handleSubmitComputerTraining = async (data) => {
-    // Submit the ComputerTraining data to the API
-    const url = "/api/computerTraining";
-    callMe(data, url, setComputerTrainingData, computerTrainingData);
-  };
-
-  const handleSubmitVisionTraining = async (data) => {
-    // Submit the VisionTraining data to the API
-    const url = "/api/visionEnhancement";
-    callMe(data, url, setVisionTrainingData, visionTrainingData);
-  };
-
-  const handleSubmitComprehensiveLowVisionEvaluation = async (data) => {
-    // Submit the VisionTraining data to the API
-    const url = "/api/comprehensiveLowVisionEvaluation";
-    callMe(data, url, setVisionTrainingData, visionTrainingData);
-  };
-
-  const handleSubmitLowVisionEvaluation = async (data) => {
-    // Submit the VisionTraining data to the API
-    const url = "/api/lowVisionEvaluation";
-    callMe(data, url, setVisionTrainingData, visionTrainingData);
-  };
-
-  const handleSubmitCounsellingEducation = async (data) => {
-    // Submit the VisionTraining data to the API
-    const url = "/api/counsellingEducation";
-    callMe(data, url, setCounsellingEducationData, counsellingEducationData);
-  };
-
-  const handleSubmitOrientationMobility = async (data) => {
-    // Submit the VisionTraining data to the API
-    const url = "/api/orientationMobileTraining";
-    callMe(data, url, setOrientationMobilityData, orientationMobilityData);
-  };
-
-  const grantConsent = async () => {
-    if (consentName === props.user.beneficiaryName) {
-      // Update user data in the database
-      const response = await fetch(`/api/beneficiary`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ mrn: props.user.mrn, consent: "Yes" }),
-      });
-
-      // Handle response from the API
-      if (response.ok) {
-        setEditableField("");
-        setConsentName("");
-        setFormData((formData) => ({ ...formData, consent: "Yes" }));
-      } else {
-        alert("An error occurred while saving user data. Please try again.");
+  } else {
+    for (let i = 0; i < props.hospitals.length; i++) {
+      const hospital = props.hospitals[i];
+      for (const hRole of hospital.hospitalRole) {
+        if (hRole.userId == props.user.id) {
+          hospitalOptions.push(hospital.name + " (ID " + hospital.id + ")");
+          break;
+        }
       }
-    } else {
-      alert(
-        "Please ensure that you have entered the beneficiary's name correctly. Try again!"
-      );
-      setConsentName("");
     }
-  };
-
-  const revokeConsent = async () => {
-    // Update user data in the database
-    const response = await fetch(`/api/beneficiary`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ mrn: props.user.mrn, consent: "No" }),
-    });
-
-    // Handle response from the API
-    if (response.ok) {
-      setEditableField("");
-      setFormData((formData) => ({ ...formData, consent: "No" }));
-      setConsentName("");
-    } else {
-      alert("An error occurred while saving user data. Please try again.");
-    }
-  };
-
-  const softDeleteBeneficiary = async () => {
-    // Update user data in the database
-    const response = await fetch(`/api/beneficiary`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ mrn: props.user.mrn, deleted: true }),
-    });
-    // Handle response from the API
-    if (response.ok) {
-      router.push("/beneficiary");
-    } else {
-      alert("An error occurred while deleting user. Please try again.");
-    }
-  };
-
-  // Handle input changes
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  // Handle select changes
-  const handleSelectChange = (e) => {
-    console.log("Entered", e);
-    let sel = e.target;
-    setFormData({
-      ...formData,
-      [sel.name]: sel.selectedOptions[0].label.split("(")[0],
-    });
-    if (sel.name === "hospitalName")
-      setFormData((formData) => ({
-        ...formData,
-        hospitalId: sel.selectedOptions[0].value,
-      }));
-  };
-
-  // Handle edit icon click
-  const handleEditClick = (field) => {
-    setEditableField(field);
-  };
-
-  // Submit the edited data
-  const handleSubmit = async (e, field) => {
-    e.preventDefault();
-    let fieldValue = formData[field];
-    if (field === "hospitalName") {
-      fieldValue = parseInt(document.getElementById("hospitalName").value);
-      field = "hospitalId";
-    }
-
-    // Update user data in the database
-    const response = await fetch(`/api/beneficiary`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ mrn: props.user.mrn, [field]: fieldValue }),
-    });
-
-    // Handle response from the API
-    if (response.ok) {
-      setEditableField("");
-    } else {
-      alert("An error occurred while saving user data. Please try again.");
-    }
-  };
-
-  if (!props.user) {
-    return <div>Loading...</div>;
   }
 
-  const formatDate = (date) => {
-    const options = { year: "numeric", month: "long", day: "numeric" };
-    return new Date(date).toLocaleDateString(undefined, options);
-  };
+  const roleOptions = [];
 
-  const renderConsentField = (field, type, canEdit) => {
-    if (formData[field] == null || formData[field] === "") {
-      return (
-        <div>
-          <div className="text-align-left">
-            <div className="flex-container">
-              <div className="text-danger">
-                No consent information recorded.
-              </div>
-              <div className="text-align-right">
-                <button
-                  className="btn btn-sm btn-link"
-                  data-bs-toggle="modal"
-                  data-bs-target="#indicateConsent"
-                >
-                  Indicate Consent
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="modal" id="indicateConsent">
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content">
-                {/* <!-- Modal Header --> */}
-                <div className="modal-header">
-                  <h4 className="modal-title">Consent Form</h4>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    data-bs-dismiss="modal"
-                    id="close-indicate"
-                  ></button>
-                </div>
+  roleOptions.push("Professional");
+  if (props.user.admin !== null) {
+    roleOptions.push("Manager");
+    roleOptions.push("Admin");
+  }
 
-                {/* <!-- Modal body --> */}
-                <div className="modal-body">
-                  I hereby grant Vision-Aid the authority to use my photos,
-                  videos or other media in their public campaigns.
-                  <br />
-                  <br />
-                  <div>
-                    Please type beneficiary&apos;s full name to grant consent:
-                    <br />
-                    <br />
-                    <input
-                      type="text"
-                      value={consentName}
-                      onChange={(e) => setConsentName(e.target.value)}
-                    />
-                  </div>
-                </div>
+  let hospitalList = [];
+  // for (const hRole of props.user.hospitalRole) {
+  //   hospitalList.push(hRole.hospitalId);
+  // }
 
-                {/* <!-- Modal footer --> */}
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-success"
-                    data-bs-dismiss="modal"
-                    onClick={() => grantConsent()}
-                  >
-                    Yes, I consent
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    data-bs-dismiss="modal"
-                    onClick={() => revokeConsent()}
-                  >
-                    No, I do not consent
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    } else if (formData[field] === "Yes") {
-      return (
-        <div>
-          <div className="text-align-left">
-            <div className="flex-container">
-              <div>{formData[field]}</div>
-              <div className="text-align-right">
-                {canEdit && (
-                  <button
-                    className="btn btn-sm btn-link text-primary ms-2"
-                    data-bs-toggle="modal"
-                    data-bs-target="#revokeConsent"
-                  >
-                    Revoke Consent
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="modal" id="revokeConsent">
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content">
-                {/* <!-- Modal Header --> */}
-                <div className="modal-header">
-                  <h4 className="modal-title">Revoke Consent?</h4>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    data-bs-dismiss="modal"
-                    id="close-revoke"
-                  ></button>
-                </div>
-
-                {/* <!-- Modal body --> */}
-                <div className="modal-body">
-                  Please confirm that you wish to revoke consent.
-                </div>
-
-                {/* <!-- Modal footer --> */}
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    data-bs-dismiss="modal"
-                    onClick={() => revokeConsent()}
-                  >
-                    Confirm
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    } else if (formData[field] === "No") {
-      return (
-        <div>
-          <div className="text-align-left">
-            <div className="flex-container">
-              <div>{formData[field]}</div>
-              <div className="text-align-right">
-                {canEdit && (
-                  <button
-                    className="btn btn-sm btn-link text-primary ms-2"
-                    data-bs-toggle="modal"
-                    data-bs-target="#grantConsent"
-                  >
-                    Grant Consent
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="modal" id="grantConsent">
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content">
-                {/* <!-- Modal Header --> */}
-                <div className="modal-header">
-                  <h4 className="modal-title">Grant Consent?</h4>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    data-bs-dismiss="modal"
-                    id="close-grant"
-                  ></button>
-                </div>
-
-                {/* <!-- Modal body --> */}
-                <div className="modal-body">
-                  <div>
-                    Type the beneficiary&apos;s full name to grant consent to
-                    Vision-Aid. Please do so only if you wish to give Vision-Aid
-                    the authority to use your photos, videos or other media in
-                    their public campaigns.
-                  </div>
-                  <br /> <br />
-                  <input
-                    type="text"
-                    value={consentName}
-                    onChange={(e) => setConsentName(e.target.value)}
-                  />
-                </div>
-
-                {/* <!-- Modal footer --> */}
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-success"
-                    data-bs-dismiss="modal"
-                    onClick={() => grantConsent()}
-                  >
-                    Confirm
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
+  let usersList = [];
+  for (let i = 0; i < props.users.length; i++) {
+    const data = props.users[i];
+    var admin;
+    var hospital, hospitalNames = "";
+    var hospitalId = null;
+    var hospitalIds = [];
+    var manager = false;
+    if (data.admin != null) {
+      admin = true;
+      manager = true;
+      hospital = "ALL";
+    } else {
+      admin = false;
+      hospital = "NONE";
+      if (data.hospitalRole.length != 0) {
+        hospitalIds = getHospitalIdsByUsers(data.id, props.roles);
+        hospitalId = data.hospitalRole.hospitalId;
+        if (data.hospitalRole[0].admin == true) {
+          manager = true;
+        }
+        for (const hospitalIdIter of hospitalIds) {
+          props.hospitals.forEach((hospitalLoop) => {
+            if (hospitalLoop.id == hospitalIdIter) {
+              hospitalNames += hospitalLoop.name + "; ";
+            }
+          });
+        }
+        hospital = hospitalNames.slice(0, -2);
+      }
     }
-  };
-
-  const renderSelectField = (field, type, canEdit) => {
-    let options = [];
-    let currentValue = null;
-    if (field === "hospitalName") {
-      options = hospitalOptions;
-      currentValue = formData["hospitalId"];
-    } else if (field === "gender") {
-      options = [
-        <option key="" value="">
-          Select Gender
-        </option>,
-        <option key="Male" value="Male">
-          Male
-        </option>,
-        <option key="Female" value="Female">
-          Female
-        </option>,
-        <option key="Other" value="Other">
-          Other
-        </option>,
-      ];
-      currentValue = formData[field];
-    } else if (field === "mDVI") {
-      options = [
-        <option key="Yes" value="Yes">
-          Yes
-        </option>,
-        <option key="No" value="No">
-          No
-        </option>,
-        <option key="At Risk" value="At Risk">
-          At Risk
-        </option>,
-      ];
-      currentValue = formData[field];
+    if (
+      props.user.hospitalRole &&
+      props.user.hospitalRole.length != 0 &&
+      props.user.hospitalRole.hospitalId != hospitalId
+    ) {
+      continue;
     }
 
-    return canEdit && editableField === field ? (
-      <div className="text-align-left">
-        <div className="flex-container">
-          <form
-            onSubmit={(e) => handleSubmit(e, field)}
-            className="d-inline ms-2"
-          >
-            <div className="row">
-              <div className="col-md-9 nopadding">
-                <select
-                  // className="form-select"
-                  className="profile-card-select"
-                  name={field}
-                  id={field}
-                  onChange={handleSelectChange}
-                  value={currentValue}
-                >
-                  {options}
-                </select>
-              </div>
-              {/* <div className="divider" /> */}
-              <div className="col-md-1 nopadding" />
-              <div className="col-md-2 nopadding">
-                <button
-                  type="submit"
-                  className="btn text-primary ms-2 nopadding"
-                >
-                  <Check2 />
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
-    ) : type == "hidden" ? (
-      <div></div>
-    ) : (
-      <div className="text-align-left">
-        <div className="flex-container">
-          {formData[field]}
-          <button
-            type="button"
-            className="btn btn-link btn-sm text-primary ms-2"
-            onClick={() => handleEditClick(field)}
-          >
-            {canEdit && <Pencil />}
-          </button>
-        </div>
-      </div>
+    if (props.user.admin === null) {
+      // dont show admins to managers
+      if (data.hospitalRole.length === 0) continue;
+
+      // only show the users assigned the same hospital as the manager
+      let hospitalMatch = false;
+      for (const hRole of data.hospitalRole) {
+        if (hospitalList.includes(hRole.hospitalId)) {
+          hospitalMatch = true;
+        }
+      }
+      if (!hospitalMatch) continue;
+    }
+
+    usersList.push(
+      <tr>
+        <td>{data.name}</td>
+        <td>{data.email}</td>
+        {props.user.admin ?
+        (admin ? <td style={{color: "green"}}>&#10004;</td> : <td style={{color: "red"}}>&#10008;</td>)
+        : <></>}
+        {manager ? <td style={{color: "green"}}>&#10004;</td> : <td style={{color: "red"}}>&#10008;</td>}
+        <td>{hospital}</td>
+      </tr>
     );
+  }
+
+  const handleSubmitModal = async function(something) {
+    const response = await fetch("/api/user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: email,
+        name: name,
+        password: password
+      }),
+    });
+
+    setModalOpen(false);
+
+    // Reset attributes
+    setEmail("");
+    setPassword("");
+    setName("");
   };
 
-  const renderField = (field, type, canEdit) => {
-    return canEdit && editableField === field ? (
-      <div className="text-align-left">
-        <div className="flex-container">
-          <form
-            onSubmit={(e) => handleSubmit(e, field)}
-            className="d-inline ms-2"
-          >
-            <div className="row">
-              <div className="col-md-9 nopadding">
-                <input
-                  type={type}
-                  className="profile-card-input"
-                  name={field}
-                  value={formData[field]}
-                  onChange={handleInputChange}
-                />
-              </div>
-              {/* <div className="divider" /> */}
-              <div className="col-md-1 nopadding" />
-              <div className="col-md-2 nopadding">
-                <button
-                  type="submit"
-                  className="btn text-primary ms-2 nopadding"
-                >
-                  <Check2 />
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
-    ) : type == "hidden" ? (
-      <div></div>
-    ) : (
-      <div className="text-align-left">
-        <div className="flex-container">
-          <div>{formData[field]}</div>
-          <div className="text-align-right">
-            <button
-              type="button"
-              className="btn btn-link btn-sm text-primary ms-2"
-              onClick={() => handleEditClick(field)}
-            >
-              {canEdit && <Pencil />}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderDOB = () => {
-    return editableField === "dateOfBirth" ? (
-      <div className="text-align-left">
-        <div className="flex-container">
-          <form
-            onSubmit={(e) => handleSubmit(e, "dateOfBirth")}
-            // className="d-inline ms-2"
-          >
-            <div className="row nopadding">
-              <div className="col-md-9 nopadding">
-                <input
-                  type="date"
-                  className="profile-card-input"
-                  name="dateOfBirth"
-                  value={formData["dateOfBirth"]}
-                  onChange={handleInputChange}
-                />
-              </div>
-              {/* <div className="divider" /> */}
-              <div className="col-md-1 nopadding" />
-              <div className="col-md-2 nopadding">
-                <button
-                  type="submit"
-                  className="btn text-primary ms-2 nopadding text-align-right"
-                >
-                  <Check2 />
-                </button>
-              </div>
-              {/* </div> */}
-            </div>
-          </form>
-        </div>
-      </div>
-    ) : (
-      <div className="text-align-left">
-        <div className="flex-container">
-          {formatDate(formData["dateOfBirth"].toString().split("T")[0])}
-          <button
-            type="button"
-            className="btn btn-link btn-sm text-primary ms-2 text-align-right"
-            onClick={() => handleEditClick("dateOfBirth")}
-          >
-            {<Pencil />}
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  const renderExtraInformation = () => {
-    return editableField === "extraInformation" ? (
-      <div className="text-align-left">
-        <div className="flex-container">
-          <form
-            onSubmit={(e) => handleSubmit(e, "extraInformation")}
-            className="d-inline ms-2"
-          >
-            <div className="row">
-              <div className="col-md-9 nopadding">
-                <textarea
-                  type="text"
-                  className="profile-card-input"
-                  name="extraInformation"
-                  value={formData["extraInformation"]}
-                  onChange={handleInputChange}
-                />
-              </div>
-              {/* <div className="divider" /> */}
-              <div className="col-md-1 nopadding" />
-              <div className="col-md-2 nopadding">
-                <button
-                  type="submit"
-                  className="btn text-primary ms-2 nopadding text-align-right"
-                >
-                  <Check2 />
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
-    ) : (
-      <div className="text-align-left">
-        <div className="flex-container">
-          {formData["extraInformation"].toString().split(":")[1].split('"')[1]}:{" "}
-          {formData["extraInformation"].toString().split(":")[2].split('"')[1]}
-          <button
-            type="button"
-            className="btn btn-link btn-sm text-primary ms-2"
-            onClick={() => handleEditClick("extraInformation")}
-          >
-            {<Pencil />}
-          </button>
-        </div>
-      </div>
-    );
+  const handleCloseModal = async function() {
+    setModalOpen(false);
   };
 
   return (
-    <div>
-      <Navigation user={props.currentUser} />
-      <div className="container p-4 mb-3">
-        <div className="d-flex">
-          <h2 className="nopadding">Beneficiary Details</h2>
-          <div className="left-auto-margin flex-container">
-            <button
-              className="btn btn-danger"
-              data-bs-toggle="modal"
-              data-bs-target="#deleteBeneficiary"
-            >
-              Delete Beneficiary
-            </button>
+    <Layout>
+      <div className="content">
+        <Navigation user={props.user} />
+        <div className="row">
+          <div>
+            <button onClick={() => setModalOpen(true)} >Create User</button>
           </div>
-          <div className="modal" id="deleteBeneficiary">
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content">
-                {/* <!-- Modal Header --> */}
-                <div className="modal-header">
-                  <h4 className="modal-title">Delete Beneficiary</h4>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    data-bs-dismiss="modal"
-                    id="close-revoke"
-                  ></button>
-                </div>
-
-                {/* <!-- Modal body --> */}
-                <div className="modal-body">
-                  Please confirm that you wish to delete this beneficiary permanently.
-                </div>
-
-                {/* <!-- Modal footer --> */}
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    data-bs-dismiss="modal"
-                    onClick={() => softDeleteBeneficiary()}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
+          <div className="offset-md-1 col-md-4">
+            <br />
+            <strong>Add User To Hospital</strong>
+            <br />
+            {/* <br /> */}
+            <div className="container m-4">
+              <br />
+              <br />
+              <form action="#" method="POST" onSubmit={(e) => addUser(e)}>
+                <table className="row">
+                  <tr className="row">
+                    <td
+                      htmlFor="manager"
+                      className="col-md-5 flex-container-vertical"
+                    >
+                      Role
+                    </td>
+                    <td className="col-md-7">
+                      <FormControl fullWidth size="small">
+                        <Select
+                          value={role}
+                          onChange={(e) => handleRoleOption(e)}
+                        >
+                          {createMenu(roleOptions, false)}
+                        </Select>
+                      </FormControl>
+                    </td>
+                  </tr>
+                  <br/>
+                  <tr className="row">
+                    <td
+                      htmlFor="hospitalSelect"
+                      className="col-md-5 flex-container-vertical"
+                    >
+                      Select a hospital
+                    </td>
+                    <td className="col-md-7">
+                      <FormControl fullWidth size="small">
+                        {role === "Professional" ?
+                        <Select
+                          value={hosp}
+                          onChange={(e) => setHosp([e.target.value])}
+                        >
+                          {createMenu(hospitalOptions, false)}
+                        </Select>
+                        : (role === "Manager" ?
+                        <Select
+                          value={hosp}
+                          onChange={(e) => setHosp(e.target.value)}
+                          multiple
+                          renderValue={(selected) => selected.join(", ")}
+                        >
+                          {createMenu(hospitalOptions, true, hosp)}
+                        </Select>
+                        :
+                        <Select
+                          value={hosp}
+                          disabled
+                        >
+                          <MenuItem key="ALL" value="ALL">
+                            <Typography align="left">
+                                ALL
+                            </Typography>
+                          </MenuItem>
+                        </Select>
+                        )}
+                      </FormControl>
+                    </td>
+                  </tr>
+                  <br />
+                  <tr className="row padding">
+                    <td htmlFor="email" className="col-md-5 vertical-align">
+                      User Email
+                    </td>
+                    <td className="col-md-7">
+                      <FormControl fullWidth size="small">
+                        <Input id="userEmail" autoComplete="off"></Input>
+                      </FormControl>
+                    </td>
+                  </tr>
+                </table>
+                <br />
+                <button
+                  type="submit"
+                  className="btn btn-success border-0 btn-block"
+                >
+                  Submit
+                </button>
+              </form>
+              <br />
             </div>
           </div>
-        </div>
-        <hr className="horizontal-line" />
-        <div className="row">
-          <div className="col-md-5">
-            <UserProfileCard
-              gender={renderSelectField("gender", "text", true)}
-              phoneNumber={renderField("phoneNumber", "text", true)}
-              MRN={renderField("mrn", "text", true)}
-              dob={renderDOB()}
-              hospitalName={renderSelectField("hospitalName", "text", true)}
-              education={renderField(
-                "education",
-                props.beneficiaryMirror.educationRequired
-                  ? "text"
-                  : props.beneficiaryMirror,
-                true
-              )}
-              districts={renderField(
-                "districts",
-                props.beneficiaryMirror.occupationRequired
-                  ? "text"
-                  : props.beneficiaryMirror,
-                true
-              )}
-              state={renderField(
-                "state",
-                props.beneficiaryMirror.stateRequired
-                  ? "text"
-                  : props.beneficiaryMirror,
-                true
-              )}
-              beneficiaryName={renderField("beneficiaryName", "text", true)}
-              occupation={renderField(
-                "occupation",
-                props.beneficiaryMirror.occupationRequired
-                  ? "text"
-                  : props.beneficiaryMirror,
-                true
-              )}
-              extraInformation={renderExtraInformation()}
-              name={formData["beneficiaryName"]}
-              mdvi={renderSelectField("mDVI", "text", true)}
-            />
-          </div>
-          {/* <div className="col-md-1"></div> */}
-          <div className="col-md-7">
-            <BeneficiaryServicesTable user={props.user} />
+          {/* <hr style="width: 1px; height: 20px; display: inline-block;"></hr> */}
+          <div className="offset-md-1 col-md-5">
+            <br />
+            <strong>List Of Users</strong>
+            <br />
+            <br />
+            <Table striped bordered hover responsive>
+              <thead>
+                <tr>
+                  <th>
+                    <i>Name</i>
+                  </th>
+                  <th>
+                    <i>Email</i>
+                  </th>
+                  {props.user.admin != null ?
+                  <th>
+                    <i>Admin</i>
+                  </th>
+                  :<></>}
+                  <th>
+                    <i>Manager</i>
+                  </th>
+                  <th>
+                    <i>Hospital</i>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>{usersList}</tbody>
+            </Table>
           </div>
         </div>
         <br />
-        <div className="row">
-          <div className="col-md-5">
-            <ConsentForm
-              consent={renderConsentField("consent", "text", true)}
-            />
-          </div>
-        </div>
       </div>
-    </div>
+      <Modal
+        title="Add User"
+        closeText="Cancel"
+        submitText="Submit"
+        open={modalOpen}
+        handleOnSubmit={handleSubmitModal}
+        handleOnClose={handleCloseModal}
+      >
+        <Form>
+          <Form.Group controlId="postName">
+            <Form.Label className="text-left">Name</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group controlId="postEmail">
+            <Form.Label className="text-left">Email</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group controlId="postPassword">
+            <Form.Label className="text-left">Password</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter temporary password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </Form.Group>
+        </Form>
+      </Modal>
+    </Layout>
   );
 }
 
-export async function getServerSideProps(ctx) {
-  const session = await getSession(ctx);
-  if (session == null) {
-    console.log("session is null");
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
+async function deleteUser(userId) {
+  const deleteConfirmation = await fetch("/api/user", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id: userId,
+    }),
+  });
+  if (deleteConfirmation.status !== 200) {
+    console.log("something went wrong");
+  } else {
+    Router.reload();
   }
-  const currentUser = await readUser(session.user.email);
-  var user;
-  try {
-    const beneficiary = await await fetch(
-      `${process.env.NEXTAUTH_URL}/api/beneficiary?mrn=${ctx.query.mrn}`,
-      {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-    user = await beneficiary.json();
-  } catch (error) {
-    console.error("Error fetching users:", error);
-  }
-
-  if (!user) {
-    return {
-      notFound: true,
-    };
-  }
-
-  const benMirror = await fetch(
-    `${process.env.NEXTAUTH_URL}/api/beneficiaryMirror?hospital=` +
-      user.hospital.name,
-    {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    }
-  );
-  const benMirrorJson = await benMirror.json();
-
-  user.hospitalName = user.hospital.name;
-
-  return {
-    props: {
-      currentUser: currentUser,
-      user: user,
-      beneficiaryMirror: benMirrorJson,
-      trainingType: await getTrainingTypes(),
-      counsellingType: await getCounsellingType(),
-      trainingSubType: await getTrainingSubTypes(),
-      hospitals: await findAllHospital(),
-    },
-  };
 }
 
-export default UserPage;
+export default Users;
