@@ -1,69 +1,59 @@
 // This function gets called at build time
-import { readUser } from "./api/user";
+import { getUserFromSession } from "@/pages/api/user";
 import { Table } from "react-bootstrap";
-import { getSession } from "next-auth/react";
 import { readBeneficiaryMirror } from "@/pages/api/beneficiaryMirror";
 import { v4 as uuidv4 } from "uuid";
 import Router from "next/router";
 import Navigation from "./navigation/Navigation";
-import { findAllHospital, findAllHospitalsHistory } from "@/pages/api/hospital";
-import TrainingForm from "@/pages/components/TrainingForm";
+import { findAllHospitalsHistory } from "@/pages/api/hospital";
 import { readMobileTrainingMirror } from "@/pages/api/mobileTrainingMirror";
 import { readComputerTrainingMirror } from "@/pages/api/computerTrainingMirror";
 import { readOrientationMobilityTrainingMirror } from "@/pages/api/orientationMobilityTrainingMirror";
 import { readVisionEnhancementMirror } from "@/pages/api/visionEnhancementMirror";
 import { readComprehensiveLowVisionEvaluationMirror } from "@/pages/api/comprehensiveLowVisionEvaluationMirror";
 import { readCounsellingEducationMirror } from "@/pages/api/counsellingEducationMirror";
-import { ChevronDown, ChevronRight, Trash } from "react-bootstrap-icons";
+import { Trash } from "react-bootstrap-icons";
 import { useState } from "react";
 import { getCounsellingType } from "@/pages/api/counsellingType";
 import { getTrainingTypes } from "@/pages/api/trainingType";
 import { getTrainingSubTypes } from "@/pages/api/trainingSubType";
 import { Modal, Button, Form } from 'react-bootstrap';
+import { getSession, withPageAuthRequired } from '@auth0/nextjs-auth0';
 import Layout from './components/layout';
 
-// http://localhost:3000/requiredfields
-export async function getServerSideProps(ctx) {
-  const session = await getSession(ctx);
-  if (session == null) {
-    console.log("session is null");
+export const getServerSideProps = withPageAuthRequired({
+  async getServerSideProps(ctx) {
+    const user = await getUserFromSession(ctx);
+    if (user == null || !user.admin) {
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        },
+      };
+    }
+
     return {
-      redirect: {
-        destination: "/",
-        permanent: false,
+      props: {
+        user: user,
+        requiredBeneficiaryFields: await readBeneficiaryMirror(),
+        requiredMobileTraining: await readMobileTrainingMirror(),
+        requiredComputerTraining: await readComputerTrainingMirror(),
+        requiredOrientationMobilityTraining:
+          await readOrientationMobilityTrainingMirror(),
+        requiredVisionEnhancement: await readVisionEnhancementMirror(),
+        requiredComprehensiveLowVisionEvaluation:
+          await readComprehensiveLowVisionEvaluationMirror(),
+        requiredCounsellingEducation: await readCounsellingEducationMirror(),
+        hospitals: await findAllHospitalsHistory(),
+        counselingTypeList: await getCounsellingType(),
+        trainingTypeList: await getTrainingTypes(),
+        trainingSubTypeList: await getTrainingSubTypes(),
+        error: null,
       },
     };
   }
-  const user = await readUser(session.user.email);
-  if (user.admin == null) {
-    console.log("user admin is null");
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
-  }
-  return {
-    props: {
-      user: user,
-      requiredBeneficiaryFields: await readBeneficiaryMirror(),
-      requiredMobileTraining: await readMobileTrainingMirror(),
-      requiredComputerTraining: await readComputerTrainingMirror(),
-      requiredOrientationMobilityTraining:
-        await readOrientationMobilityTrainingMirror(),
-      requiredVisionEnhancement: await readVisionEnhancementMirror(),
-      requiredComprehensiveLowVisionEvaluation:
-        await readComprehensiveLowVisionEvaluationMirror(),
-      requiredCounsellingEducation: await readCounsellingEducationMirror(),
-      hospitals: await findAllHospitalsHistory(),
-      counselingTypeList: await getCounsellingType(),
-      trainingTypeList: await getTrainingTypes(),
-      trainingSubTypeList: await getTrainingSubTypes(),
-      error: null,
-    },
-  };
-}
+});
 
 function RequiredFields(props) {
   const [section, setSection] = useState("");
@@ -79,7 +69,7 @@ function RequiredFields(props) {
   const [posts, setPosts] = useState([
     { id: 1, title: 'Post 1', content: 'Content 1', date: '2022-03-08' },
     { id: 2, title: 'Post 2', content: 'Content 2', date: '2022-03-09' },
-    { id: 3, title: 'Post 3', content: 'Content 3', date: '2022-03-07' },
+    { id: 3, title: 'Post 3', content: 'Content 3', date: '2022-03-07' }
   ]);
 
   const handleShow = () => {
@@ -103,15 +93,99 @@ function RequiredFields(props) {
     setEditMode(true);
   };
 
-  const handleDelete = (post) => {
+  /*const handleDelete = (post) => {
     setSelectedPost(post);
     setConfirmDelete(true);
+  };*/
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`/api/beneficiaryMirror?id=${selectedPost.id}`, {
+        method: 'DELETE',
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to delete post');
+      }
+  
+      // Remove the deleted post from the posts state
+      const updatedPosts = posts.filter((post) => post.id !== selectedPost.id);
+      setPosts(updatedPosts);
+  
+      // Close the confirmation modal
+      setConfirmDelete(false);
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      // Handle error (e.g., show an error message)
+    }
   };
 
-// POST - for creating
+  // POST - for creating
   // PATCH - for updating
   // DELETE - for delete
   // 'Update' and 'Save Changes' button
+  /*
+  const handleSaveChanges = async () => {
+    try {
+      if (editMode) {
+        // Edit mode, so make a PATCH request to update the existing post
+        const response = await fetch({
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: title,
+            content: content,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update post');
+        }
+
+        const updatedPostData = await response.json();
+
+        // Update the posts state with the updated post data
+        const updatedPosts = posts.map((post) =>
+          post.id === updatedPostData.id ? updatedPostData : post
+        );
+        setPosts(updatedPosts);
+      } else {
+        // Not in edit mode, so make a POST request to create a new post
+        const response = await fetch({
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: posts.length + 1,
+            title: title,
+            content: content,
+            date: new Date().toISOString().slice(0, 10), // Current date in yyyy-mm-dd format
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create post');
+        }
+
+        const postData = await response.json();
+
+        // Update the posts state with the new post data
+        // ... to create new array including all elements of existing posts and add to postData at end
+        setPosts([...posts, postData]);
+      }
+
+      // Close the modal
+      handleClose();
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      // Handle error (e.g., show an error message)
+    }
+      // Set editMode to false after saving changes
+      //setEditMode(false);
+  };*/
+
   const handleSaveChanges = async () => {
     try {
       if (editMode) {
@@ -122,6 +196,7 @@ function RequiredFields(props) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            id: selectedPost.id,
             title: title,
             content: content,
           }),
@@ -146,10 +221,9 @@ function RequiredFields(props) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            id: posts.length + 1,
             title: title,
             content: content,
-            date: new Date().toISOString().slice(0, 10), // Current date in yyyy-mm-dd format
+            date: new Date().toISOString().slice(0, 10),
           }),
         });
   
@@ -160,7 +234,6 @@ function RequiredFields(props) {
         const postData = await response.json();
   
         // Update the posts state with the new post data
-        // ... to create new array including all elements of existing posts and add to postData at end
         setPosts([...posts, postData]);
       }
   
@@ -170,8 +243,8 @@ function RequiredFields(props) {
       console.error('Error saving changes:', error);
       // Handle error (e.g., show an error message)
     }
-      // Set editMode to false after saving changes
-      setEditMode(false);
+    // Set editMode to false after saving changes
+    setEditMode(false);
   };
 
   function removeExtraField(fieldId) {
