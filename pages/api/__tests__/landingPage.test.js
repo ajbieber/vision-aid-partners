@@ -78,4 +78,9 @@ describe('Landing Page API Tests', () => {
         const responseBody = await response.json();
         expect(responseBody.id).toBe(id);
     });
+    test('should read all content successfully', async () => {
+        const response = await fetch(`${apiUrl}`, { method: "GET" });
+        expect(response.status).toBe(200);
+        // const responseBody = await response.json();
+    });
 });

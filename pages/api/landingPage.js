@@ -36,17 +36,19 @@ async function updateContent(req, res) {
   }
 }
 
-
 async function readContent(req, res) {
+  console.log("\n\n +++++++ inside readContent ++++++++")
   var userData;
-  try {
-    if (req.query.id != null || req.query.id != '' ) {
+  try { 
+    if (req.query.id  && (req.query.id != null || req.query.id != '' )) {
       userData =  await prisma.landing_Page.findFirst({
         where: {
           id: parseInt(req.query.id),
         },
       });
-    } 
+    } else {
+      userData =  await prisma.landing_Page.findMany();
+    }
     return res.status(200).json(userData);
   } catch (error) {
     console.log(error);
@@ -55,6 +57,25 @@ async function readContent(req, res) {
       .json({ error: "Error reading from database", success: false });
   }
 }
+
+// async function readContent(req, res) {
+//   var userData;
+//   try {
+//     if (req.query.id != null || req.query.id != '' ) {
+//       userData =  await prisma.landing_Page.findFirst({
+//         where: {
+//           id: parseInt(req.query.id),
+//         },
+//       });
+//     } 
+//     return res.status(200).json(userData);
+//   } catch (error) {
+//     console.log(error);
+//     return res
+//       .status(500)
+//       .json({ error: "Error reading from database", success: false });
+//   }
+// }
 
 async function addContent(req, res) {
   const dt = new Date();
