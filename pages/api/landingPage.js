@@ -39,7 +39,7 @@ async function updateContent(req, res) {
 async function readContent(req, res) {
   var userData;
   try { 
-    if (req.query.id  && (req.query.id != null || req.query.id != '' )) {
+    if (req.query.id  || req.query.id != '' ) {
       userData =  await prisma.landing_Page.findFirst({
         where: {
           id: parseInt(req.query.id),
