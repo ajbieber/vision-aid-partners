@@ -1,8 +1,10 @@
 import handler, { allUsers } from '../user';
 
+const mockGet = jest.fn();
 const mockGetAll = jest.fn();
 const mockCreate = jest.fn();
 const mockDelete = jest.fn();
+const mockUpdate = jest.fn();
 jest.mock('auth0', () => {
   return {
     ManagementClient: jest.fn().mockImplementation(() => {
@@ -11,6 +13,8 @@ jest.mock('auth0', () => {
           create: () => mockCreate(),
           getAll: () => mockGetAll(),
           delete: () => mockDelete(),
+          get: () => mockGet(),
+          update: () => mockUpdate(),
         }
       }
     })
@@ -127,6 +131,45 @@ describe('User API Tests', () => {
     expect(res.data).toEqual(expectedUser);
     expect(res.code).toBe(200);
     expect(res.success).toEqual({ success: true });
+  });
+
+  it('should update an Auth0 user', async () => {
+    const mockUser = {
+      name: "Test User",
+      id: "testuser123",
+      email: 'testuser123@gmail.com',
+      app_metadata: {
+        'va_partners': {
+          hospitalRole: [
+            { id: 1, admin: false }
+          ],
+          admin: false
+        }
+      }
+    };
+
+    mockGet.mockImplementationOnce(() => {
+      return { data: mockUser };
+    });
+
+    mockUpdate.mockImplementationOnce(() => {
+      return { status: 200 };
+    });
+
+    const req = {
+      method: 'PATCH',
+      query: {
+        id: "testuser123"
+      },
+      body: {
+        admin: true,
+        name: 'New Name',
+      }
+    };
+    const res = new MockResponse();
+
+    await handler(req, res);
+    expect(res.code).toBe(200);
   });
 
   describe('Delete User', () => {

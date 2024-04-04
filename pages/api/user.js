@@ -14,6 +14,8 @@ export default async function handler(req, res) {
     return await createUser(req, res);
   } else if (req.method == "GET") {
     return await readData(req, res);
+  } else if (req.method == "PATCH") {
+    return await updateUser(req, res);
   } else if (req.method == "DELETE") {
     return await deleteUser(req, res);
   } else {
@@ -60,6 +62,31 @@ async function createUser(req, res) {
     return res.status(500).json({ error: `Failed to create user with error: ${error.message}` });
   }
 }
+
+async function updateUser(req, res) {
+  try {
+    const existingUserResponse = await managementClient.users.get({ id: req.query.id });
+    const existingUser = existingUserResponse.data;
+
+    const body = req.body;
+    const updateObject = {
+      name: body.name,
+      app_metadata: {
+        "va_partners": {
+          ...existingUser.app_metadata["va_partners"],
+          admin: body.admin,
+        }
+      }
+    };
+
+    await managementClient.users.update({ id: req.query.id }, updateObject);
+    return res.status(200).end();
+  }
+  catch (error) {
+    return res.status(500).json({ error: `Failed to update user with error: ${error.message}` });
+  }
+}
+
 
 async function readData(req, res) {
   try {
