@@ -2,7 +2,7 @@ import Navigation from "./navigation/Navigation";
 import { allUsers, allHospitalRoles, getUserFromSession } from "@/pages/api/user";
 import { findAllHospital } from "@/pages/api/hospital";
 import Router from "next/router";
-import { Table } from "react-bootstrap";
+import Table from "./components/Table";
 import { FormControl, Select, MenuItem, Input, Typography, FormLabel } from "@mui/material";
 import { createMenu } from "@/constants/globalFunctions";
 import { useState } from "react";
@@ -425,30 +425,8 @@ function Users(props) {
             <strong>List Of Users</strong>
             <br />
             <br />
-            <Table striped bordered hover responsive>
-              <thead>
-                <tr>
-                  <th>
-                    <i>Name</i>
-                  </th>
-                  <th>
-                    <i>Email</i>
-                  </th>
-                  {props.user.admin != null ?
-                  <th>
-                    <i>Admin</i>
-                  </th>
-                  :<></>}
-                  <th>
-                    <i>Manager</i>
-                  </th>
-                  <th>
-                    <i>Hospital</i>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>{usersList}</tbody>
-            </Table>
+
+            <Table columns={["Name", "Email", "Admin", "Manager", "Hospital"]} rows={usersList} />
           </div>
         </div>
         <br />

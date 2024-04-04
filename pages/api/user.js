@@ -131,6 +131,7 @@ export async function allUsers() {
 
   return results.data.map((user) => {
     return {
+    id: user.user_id,
     email: user.email,
     name: user.name,
     admin: user.app_metadata.va_partners.admin || false,
@@ -148,8 +149,13 @@ export async function allHospitalRoles() {
  * @returns 204 No Content
  */
 async function deleteUser(req, res) {
-  await managementClient.users.delete(req.body.id);
-  return res.status(204);
+  const response = await managementClient.users.delete({ id: req.query.id });
+
+  if (response.status !== 204) {
+    return res.status(response.status).end();
+  }
+  
+  return res.status(204).end();
 }
 
 /**
