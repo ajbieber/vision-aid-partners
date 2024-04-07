@@ -41,7 +41,6 @@ async function readContent(req, res) {
   try { 
     console.log(req.query)
     if (req.query.id != null ) {
-      console.log("\n\n ..........." , req.query.id )
       userData =  await prisma.landing_Page.findFirst({
         where: {
           id: parseInt(req.query.id),
@@ -49,7 +48,6 @@ async function readContent(req, res) {
       });
     } else {
       // if no content id provided, return all contents.
-      console.log("\n\n ..... no req.query.id ....."  )
       userData =  await prisma.landing_Page.findMany();
     }
     return res.status(200).json(userData);
