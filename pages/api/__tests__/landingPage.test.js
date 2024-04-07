@@ -19,9 +19,7 @@ describe('Landing Page API Tests', () => {
           },
           body: JSON.stringify(requestBody)
         });
-
         expect(response.status).toBe(200);
-
         const responseBody = await response.json();
         expect(responseBody.userId).toBe(uid);
         expect(responseBody.content).toBe(requestBody.content);
@@ -37,13 +35,10 @@ describe('Landing Page API Tests', () => {
         
         // Send a GET request to the API endpoint /api/landingPage?id=2
         const response = await fetch(`${apiUrl}?${queryString}`);
-
         expect(response.status).toBe(200);
-        
         const responseBody = await response.json();
         expect(responseBody.id).toBe(id);
         expect(responseBody.userId).toBe(uid);
-
     });
     test('should update content successfully', async () => {
         const requestBody = {
@@ -59,9 +54,12 @@ describe('Landing Page API Tests', () => {
           },
           body: JSON.stringify(requestBody)
         });
-
-
         expect(response.status).toBe(200);
+    });
+    test('should read all content successfully', async () => {
+        const response = await fetch(`${apiUrl}`, { method: "GET" });
+        expect(response.status).toBe(200);
+        // const responseBody = await response.json();
     });
     test('should delete content successfully', async () => {
         // Mock request body
@@ -69,12 +67,9 @@ describe('Landing Page API Tests', () => {
             id: id,
         };
         const queryString = new URLSearchParams(requestData).toString();
-        
         // Send a DELETE request to the API endpoint /api/landingPage?id=2
         const response = await fetch(`${apiUrl}?${queryString}`, { method: "DELETE" });
-
         expect(response.status).toBe(200);
-        
         const responseBody = await response.json();
         expect(responseBody.id).toBe(id);
     });
