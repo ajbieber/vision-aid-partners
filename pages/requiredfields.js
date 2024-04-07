@@ -22,7 +22,7 @@ import { getSession, withPageAuthRequired } from '@auth0/nextjs-auth0';
 import Layout from './components/layout';
 import SidePanel from "./components/SidePanel";
 
-
+const url = "/api/landingPage";
 export const getServerSideProps = withPageAuthRequired({
   async getServerSideProps(ctx) {
     const user = await getUserFromSession(ctx);
@@ -67,6 +67,7 @@ function RequiredFields(props) {
   const [editMode, setEditMode] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [userContent, setUserContent] = useState("");
 
   const sections = ["Hospitals", "Beneficiaries", "Evaluations", "Trainings", "Landing Page"]
 
@@ -79,6 +80,20 @@ function RequiredFields(props) {
   const handleShow = () => {
     setShowModal(true);
     setEditMode(false);
+    // const userData = fetch(url, {
+    //   method: "GET",
+    //   headers: { "Content-Type": "application/json" },
+
+    // });
+    // console.log("\n........ userdata......", userData)
+    // if (userData.status !== 200) {
+    //   console.log("something went wrong");
+    // } else {
+    //   console.log("post updated successfully !!!");
+    // }
+
+    // setContent(userData.content);
+    
   };
 
   const handleClose = () => {
@@ -95,15 +110,55 @@ function RequiredFields(props) {
     setContent(post.content);
     setShowModal(true);
     setEditMode(true);
+    
+    // const apiUrl = 'http://localhost:3000/api/landingPage'; 
+    if (post == "") {
+      console.log("\n empty content is not allowed");
+      return
+    }
+    const addConfirmation = fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: post.id,
+        content: post.content,
+      }),
+    });
+    if (addConfirmation.status !== 200) {
+      console.log("something went wrong");
+    } else {
+      console.log("post updated successfully !!!");
+    }
   };
-
+  
   const handleDelete = (post) => {
     setSelectedPost(post);
     setConfirmDelete(true);
   };
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = (e) => {
     // Handle saving changes
+    // async function addSubTypesSubmit(e) {
+      e.preventDefault();
+      console.log("\n\n\n user")
+      const response = fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          emailAddr: document.getElementsByClassName("jsx-db670790b21b4b04 top display text-light").valueOf()[0].innerText.split(': ')[1].split(' (')[0],
+          content: e.target.value
+        }),
+      });
+      console.log(response)
+      // Handle response from the API
+      if (response.status !== 200) {
+        console.log("something went wrong");
+      } else {
+        console.log("post updated successfully !!!");
+      }
+    /// close after sending create
     handleClose();
   };
 
@@ -495,7 +550,7 @@ function RequiredFields(props) {
   for (const counselingType of props.counselingTypeList) {
     if (foundTypeCounselingOther == false && counselingType == "Other") {
       foundTypeCounselingOther = true;
-      console.log("Do not delete other option");
+      // console.log("Do not delete other option");
       continue;
     }
     removeTypeCounseling.push(
@@ -530,7 +585,7 @@ function RequiredFields(props) {
     );
     if (foundTypeTrainingOther == false && trainingType == "Other") {
       foundTypeTrainingOther = true;
-      console.log("Do not delete other option");
+      // console.log("Do not delete other option");
       continue;
     }
     removeTypeTraining.push(
@@ -573,7 +628,7 @@ function RequiredFields(props) {
       trainingSubType.value == "Other"
     ) {
       foundSubTypeTrainingOther[trainingSubType.trainingType.id] = true;
-      console.log("Do not delete other option");
+      // console.log("Do not delete other option");
       continue;
     }
     removeSubTypeTraining.push(
@@ -1448,11 +1503,12 @@ function RequiredFields(props) {
                     Close
                   </Button>
                   {editMode ? (
+
                     <Button variant="primary" onClick={handleSaveChanges}>
                       Update
                     </Button>
                   ) : (
-                    <Button variant="primary" onClick={handleSaveChanges}>
+                    <Button variant="primary" onClick={(e, props) => handleSaveChanges(e, props)}>
                       Save Changes
                     </Button>
                   )}
