@@ -2,7 +2,7 @@ const apiUrl = 'http://localhost:3000/api/landingPage';
 
 describe('Landing Page API Tests', () => {
     let uid = 2;
-    let id = 1;
+    let id;
     test('should add content successfully', async () => {
         // Mock request body
         const requestBody = {
