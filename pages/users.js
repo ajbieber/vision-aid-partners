@@ -11,7 +11,7 @@ import Table from "./components/Table";
 import { useRouter } from 'next/router';
 import { PencilSquare, Trash3 } from 'react-bootstrap-icons';
 import { createMenu } from "@/constants/globalFunctions";
-import { FormControl, Select, MenuItem, Input, Typography } from "@mui/material";
+import { FormControl, Select, MenuItem, Input, Typography, Tooltip } from "@mui/material";
 
 export const getServerSideProps = withPageAuthRequired({
   async getServerSideProps(ctx) {
@@ -50,7 +50,7 @@ export const getServerSideProps = withPageAuthRequired({
 });
 
 function NewUserModal(props) {
-  const { modalOpen, setModalOpen } = props;
+  const { user, modalOpen, setModalOpen } = props;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -143,11 +143,16 @@ function NewUserModal(props) {
         </Form.Group>
         <Form.Group controlId="postAdmin">
           <Form.Label className="text-left">Admin</Form.Label>
-          <Form.Check
-            type="checkbox"
-            checked={admin}
-            onChange={(e) => setAdmin(e.target.checked)}
-          />
+          <Tooltip title={(user.admin) ? "" : "Not permitted to create admin users"}>
+            <span> {/* This span is required as per: https://mui.com/material-ui/react-tooltip/#disabled-elements */}
+              <Form.Check
+                disabled={!user.admin}
+                type="checkbox"
+                checked={admin}
+                onChange={(e) => setAdmin(e.target.checked)}
+              />
+            </span>
+          </Tooltip>
         </Form.Group>
       </Form>
     </Modal>
@@ -155,7 +160,7 @@ function NewUserModal(props) {
 }
 
 function EditUserModal(props) {
-  const { modalOpen, setModalOpen, userToEdit } = props;
+  const { user, modalOpen, setModalOpen, userToEdit } = props;
 
   const [id, setId] = useState(userToEdit.id);
   const [hospitalRole, setHospitalRole] = useState(userToEdit.hospitalRole);
@@ -232,11 +237,16 @@ function EditUserModal(props) {
         </Form.Group>
         <Form.Group controlId="postAdmin">
           <Form.Label className="text-left">Admin</Form.Label>
-          <Form.Check
-            type="checkbox"
-            checked={admin}
-            onChange={(e) => setAdmin(e.target.checked)}
-          />
+          <Tooltip title={(user.admin) ? "" : "Not permitted to edit admin status of users"}>
+            <span> {/* This span is required as per: https://mui.com/material-ui/react-tooltip/#disabled-elements */}
+              <Form.Check
+                disabled={!user.admin}
+                type="checkbox"
+                checked={admin}
+                onChange={(e) => setAdmin(e.target.checked)}
+              />
+            </span>
+          </Tooltip>
         </Form.Group>
       </Form>
     </Modal>
@@ -532,8 +542,8 @@ export default function Users(props) {
           </div>
         </div>
       </div>
-      <NewUserModal modalOpen={createModalOpen} setModalOpen={setCreateModalOpen} />
-      <EditUserModal modalOpen={editModalOpen} setModalOpen={setEditModalOpen} userToEdit={selectedUser} />
+      <NewUserModal user={user} modalOpen={createModalOpen} setModalOpen={setCreateModalOpen} />
+      <EditUserModal user={user} modalOpen={editModalOpen} setModalOpen={setEditModalOpen} userToEdit={selectedUser} />
       <Modal
         title="Delete User"
         closeText="Cancel"
