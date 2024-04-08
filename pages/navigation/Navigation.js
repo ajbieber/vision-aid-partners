@@ -10,13 +10,18 @@ function Navigation(props) {
 
   // Parse the user roles from Auth0
   if (user) {
-    role = user.admin
-      ? "admin"
-      : user.hospitalRole[0].admin
-      ? "manager"
-      : user.hospitalRole
-      ? "professional"
-      : "invalid";
+    if (user.admin) {
+      role = "admin"
+    }
+    else if (user.hospitalRole.length == 0) {
+      role = "professional"
+    }
+    else if (user.hospitalRole[0].admin) {
+      role = "manager"
+    }
+    else {
+      role = "invalid"
+    }
   }
 
   return (

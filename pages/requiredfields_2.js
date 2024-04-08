@@ -1,42 +1,33 @@
-// This function gets called at build time
-import { readUser } from './api/user'
-import {getSession} from "next-auth/react";
-import {readBeneficiaryMirror} from "@/pages/api/beneficiaryMirror";
+import { getUserFromSession } from '@/pages/api/user'
+import { readBeneficiaryMirror } from "@/pages/api/beneficiaryMirror";
 import { v4 as uuidv4 } from 'uuid';
 import Router from "next/router";
-import {findAllHospital} from "@/pages/api/hospital";
+import { findAllHospital } from "@/pages/api/hospital";
+import { withPageAuthRequired } from '@auth0/nextjs-auth0';
 
-// http://localhost:3000/requiredfields
-export async function getServerSideProps(ctx) {
-    const session = await getSession(ctx)
-    if (session == null) {
-        console.log("session is null")
-        return {
-            redirect: {
-                destination: '/',
-                permanent: false,
-            },
-        }
-    }
-    const user = await readUser(session.user.email)
-    if (user.admin == null) {
-        console.log("user admin is null")
-        return {
-            redirect: {
-                destination: '/',
-                permanent: false,
-            },
-        }
-    }
-    return {
-        props: {
-            user: user,
-            requiredBeneficiaryFields: await readBeneficiaryMirror(null),
-            hospitals: await findAllHospital(),
-            error: null
+
+export const getServerSideProps = withPageAuthRequired({
+  async getServerSideProps(ctx) {
+    const user = await getUserFromSession(ctx);
+    if (user === null || !user.admin) {
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
         },
+      };
     }
-}
+    
+    return {
+      props: {
+        user: user,
+        requiredBeneficiaryFields: await readBeneficiaryMirror(null),
+        hospitals: await findAllHospital(),
+        error: null
+      }
+    }
+  }
+});
 
 function requiredFields(props) {
 

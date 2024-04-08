@@ -1,6 +1,5 @@
 import prisma from "client";
 import { ManagementClient } from "auth0";
-import { use } from "react";
 import { getSession } from '@auth0/nextjs-auth0';
 
 const managementClient = new ManagementClient({
@@ -12,8 +11,6 @@ const managementClient = new ManagementClient({
 export default async function handler(req, res) {
   if (req.method === "POST") {
     return await createUser(req, res);
-  } else if (req.method == "GET") {
-    return await readData(req, res);
   } else if (req.method == "PATCH") {
     return await updateUser(req, res);
   } else if (req.method == "DELETE") {
@@ -38,9 +35,7 @@ async function createUser(req, res) {
     email: body.email,
     app_metadata: {
       "va_partners": {
-        hospitalRole: [
-          { hospitalId: 1, admin: body.admin }
-        ],
+        hospitalRole: [],
         admin: body.admin || false,
       }
     },
@@ -63,17 +58,21 @@ async function createUser(req, res) {
   }
 }
 
+/**
+ * Updates a user based on the data passed in. Only updatesa users name, hospitalRole, and admin
+ * status. Does NOT update email or password.
+ * 
+ * @param req 
+ * @param res  
+ */
 async function updateUser(req, res) {
   try {
-    const existingUserResponse = await managementClient.users.get({ id: req.query.id });
-    const existingUser = existingUserResponse.data;
-
     const body = req.body;
     const updateObject = {
       name: body.name,
       app_metadata: {
         "va_partners": {
-          ...existingUser.app_metadata["va_partners"],
+          hospitalRole: body.hospitalRole,
           admin: body.admin,
         }
       }
@@ -87,30 +86,6 @@ async function updateUser(req, res) {
   }
 }
 
-
-async function readData(req, res) {
-  try {
-    var user;
-    if (req.query.email != null) {
-      user = await readUser(req.query.email);
-    } else if (req.query.hospitalName != null) {
-      getUsersByHospital(req.query.hospitalName);
-    } else {
-      user = await prisma.user.findMany({
-        include: {
-          hospitalRole: true,
-          admin: true,
-        },
-      });
-    }
-    return res.status(200).json(user, { success: true });
-  } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .json({ error: "Error reading from database", success: false });
-  }
-}
 
 export async function getUsersByHospital(hospitalId) {
   const hospital = await prisma.hospitalRole.findMany({
@@ -130,18 +105,6 @@ export async function getUsersByHospital(hospitalId) {
   return prisma.user.findMany({
     where: {
       userId: { in: userId },
-    },
-  });
-}
-
-export async function readUser(email) {
-  return prisma.user.findUnique({
-    where: {
-      email: email,
-    },
-    include: {
-      hospitalRole: true,
-      admin: true,
     },
   });
 }

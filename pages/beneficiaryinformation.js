@@ -1,20 +1,17 @@
-// This function gets called at build time
-import { readUser } from "./api/user";
 import { readBeneficiaryMirror } from "@/pages/api/beneficiaryMirror";
 import { findAllHospital } from "@/pages/api/hospital";
-import { v4 as uuidv4 } from "uuid";
-import Router from "next/router";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import Navigation from "./navigation/Navigation";
 import moment from "moment";
-import { getSession, withPageAuthRequired } from '@auth0/nextjs-auth0'
+import { withPageAuthRequired } from '@auth0/nextjs-auth0'
+import { getUserFromSession } from "@/pages/api/user";
 
 // http://localhost:3000/beneficiaryinformation
 export const getServerSideProps = withPageAuthRequired({
   async getServerSideProps(ctx) {
-    const session = await getSession(ctx.req, ctx.res);
-    if (session == null) {
+    const user = await getUserFromSession(ctx);
+    if (user === null || (!user.admin && user.hospitalRole.length == 0)) {
       return {
         redirect: {
           destination: "/",
@@ -22,17 +19,7 @@ export const getServerSideProps = withPageAuthRequired({
         },
       };
     }
-    const { user } = session;
-    const userIsAdmin = user['https://vapartners.org/roles'].includes('Admin');
-    if (!userIsAdmin && user.hospitalRole == null) {
-      console.log("user admin is not null or added to a hospital");
-      return {
-        redirect: {
-          destination: "/",
-          permanent: false,
-        },
-      };
-    }
+
     return {
       props: {
         beneficiaryName: ctx.query.beneficiaryName,
