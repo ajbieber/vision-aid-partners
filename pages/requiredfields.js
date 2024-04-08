@@ -67,7 +67,7 @@ function RequiredFields(props) {
   const [editMode, setEditMode] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [userContent, setUserContent] = useState("");
+  const [userContent, setUserContent] = useState('');
 
   const sections = ["Hospitals", "Beneficiaries", "Evaluations", "Trainings", "Landing Page"]
 
@@ -137,10 +137,7 @@ function RequiredFields(props) {
   };
 
   const handleSaveChanges = (e) => {
-    // Handle saving changes
-    // async function addSubTypesSubmit(e) {
       e.preventDefault();
-      console.log("\n\n\n user")
       const response = fetch(url, {
         method: "POST",
         headers: {
@@ -148,7 +145,7 @@ function RequiredFields(props) {
         },
         body: JSON.stringify({
           emailAddr: document.getElementsByClassName("jsx-db670790b21b4b04 top display text-light").valueOf()[0].innerText.split(': ')[1].split(' (')[0],
-          content: e.target.value
+          content: userContent
         }),
       });
       console.log(response)
@@ -1491,8 +1488,11 @@ function RequiredFields(props) {
                         as="textarea"
                         rows={3}
                         placeholder="Enter content"
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
+                        // value={userContent}
+                        onChange={(e) => {
+                          setUserContent(e.target.value)
+                        }}
+                        
                         style={{ textAlign: 'left' }}
                       />
                     </Form.Group>
@@ -1504,11 +1504,11 @@ function RequiredFields(props) {
                   </Button>
                   {editMode ? (
 
-                    <Button variant="primary" onClick={handleSaveChanges}>
+                    <Button variant="primary">
                       Update
                     </Button>
                   ) : (
-                    <Button variant="primary" onClick={(e, props) => handleSaveChanges(e, props)}>
+                    <Button variant="primary" onClick={handleSaveChanges}>
                       Save Changes
                     </Button>
                   )}
