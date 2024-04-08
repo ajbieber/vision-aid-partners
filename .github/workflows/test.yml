@@ -1,0 +1,39 @@
+name: Test
+
+env:
+  DATABASE_URL: mysql://root:root@localhost:3306/vision
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.3
+        ports:
+           - 3306:3306
+        env:
+          MYSQL_DATABASE: vision
+          MYSQL_ROOT_USER: root
+          MYSQL_ROOT_PASSWORD: root
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run database migrations
+        run: npx prisma migrate dev
+
+      - name: Seed database
+        run: npx prisma db seed
+
+      - name: Run the server and tests
+        run: npm run dev & npm run test
