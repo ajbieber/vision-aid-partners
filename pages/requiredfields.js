@@ -79,21 +79,7 @@ function RequiredFields(props) {
 
   const handleShow = () => {
     setShowModal(true);
-    setEditMode(false);
-    // const userData = fetch(url, {
-    //   method: "GET",
-    //   headers: { "Content-Type": "application/json" },
-
-    // });
-    // console.log("\n........ userdata......", userData)
-    // if (userData.status !== 200) {
-    //   console.log("something went wrong");
-    // } else {
-    //   console.log("post updated successfully !!!");
-    // }
-
-    // setContent(userData.content);
-    
+    setEditMode(false);    
   };
 
   const handleClose = () => {
