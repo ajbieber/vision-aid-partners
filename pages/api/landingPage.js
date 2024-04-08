@@ -69,16 +69,10 @@ async function addContent(req, res) {
   var uid;
   uid = await getUserID(body.emailAddr)
   .then((d) => {
-    console.log("...........\n\n uid.", d)
-    abc = d
     return d
   }).catch((err) => {
     res.status(500).json({ error: "Failed to get uid" + err, success: false });
   })
-
-
-  console.log("\n\n ....... abc:", abc)
-  console.log("\n\n ....... uid:", uid)
   const create = {
     data: {
       user: {
@@ -123,17 +117,11 @@ async function deleteContent(req, res) {
 
 
 async function getUserID(emailAddr) {
-  console.log("\n\n............... emailAddr")
-  console.log( emailAddr)
-
-
   const data = await prisma.user.findFirst({
     where: {
       email: emailAddr,
     }
   })
-
-  console.log("\n\n...............getUserID")
   console.log(getUserID)
   return data.id
 }
