@@ -1,8 +1,10 @@
 import handler, { allUsers } from '../user';
-import { ManagementClient } from 'auth0';
 
+const mockGet = jest.fn();
 const mockGetAll = jest.fn();
 const mockCreate = jest.fn();
+const mockDelete = jest.fn();
+const mockUpdate = jest.fn();
 jest.mock('auth0', () => {
   return {
     ManagementClient: jest.fn().mockImplementation(() => {
@@ -10,6 +12,9 @@ jest.mock('auth0', () => {
         users: {
           create: () => mockCreate(),
           getAll: () => mockGetAll(),
+          delete: () => mockDelete(),
+          get: () => mockGet(),
+          update: () => mockUpdate(),
         }
       }
     })
@@ -30,6 +35,10 @@ MockResponse.prototype.status = function (code) {
 MockResponse.prototype.json = function(data, success) {
   this.data = data;
   if (success) this.success = success;
+  return this;
+}
+
+MockResponse.prototype.end = function() {
   return this;
 }
 
@@ -123,4 +132,77 @@ describe('User API Tests', () => {
     expect(res.code).toBe(200);
     expect(res.success).toEqual({ success: true });
   });
+
+  it('should update an Auth0 user', async () => {
+    const mockUser = {
+      name: "Test User",
+      id: "testuser123",
+      email: 'testuser123@gmail.com',
+      app_metadata: {
+        'va_partners': {
+          hospitalRole: [
+            { id: 1, admin: false }
+          ],
+          admin: false
+        }
+      }
+    };
+
+    mockGet.mockImplementationOnce(() => {
+      return { data: mockUser };
+    });
+
+    mockUpdate.mockImplementationOnce(() => {
+      return { status: 200 };
+    });
+
+    const req = {
+      method: 'PATCH',
+      query: {
+        id: "testuser123"
+      },
+      body: {
+        admin: true,
+        name: 'New Name',
+      }
+    };
+    const res = new MockResponse();
+
+    await handler(req, res);
+    expect(res.code).toBe(200);
+  });
+
+  describe('Delete User', () => {
+    it('should delete a user in Auth0', async () => {
+      mockDelete.mockImplementationOnce(() => {
+        return { status: 204 };
+      });
+  
+      const req = {
+        method: 'DELETE',
+        query: {
+          id: "testuser123"
+        }
+      };
+      const res = new MockResponse();
+      await handler(req, res);
+      expect(res.code).toBe(204);
+    });
+
+    it('should fail to delete a user in Auth0', async () => {
+      mockDelete.mockImplementationOnce(() => {
+        return { status: 500, statusText: "Something went wrong..." };
+      });
+  
+      const req = {
+        method: 'DELETE',
+        query: {
+          id: "testuser123"
+        }
+      };
+      const res = new MockResponse();
+      await handler(req, res);
+      expect(res.code).toBe(500);
+    });
+  })
 });

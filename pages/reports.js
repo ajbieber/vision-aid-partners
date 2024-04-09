@@ -52,13 +52,12 @@ export const getServerSideProps = withPageAuthRequired({
     // If it's a non admin user, we only want to show the summary for their hospital
     const roles = await allHospitalRoles();
     let hospitalIds;
-    const isAdmin = user.admin != null;
-    if (!isAdmin) {
+    if (!user.admin) {
       hospitalIds = getHospitalIdsByUsers(user.email, roles);
     }
 
     // The following is code to download summary data as a CSV file
-    const beneficiaryListFromAPI = await findAllBeneficiary(isAdmin, hospitalIds);
+    const beneficiaryListFromAPI = await findAllBeneficiary(user.admin, hospitalIds);
 
     let beneficiaryList = [];
 
@@ -240,7 +239,7 @@ export const getServerSideProps = withPageAuthRequired({
     }
 
     // We finally return all the data to the page
-    const summary = await getSummaryForAllHospitals(isAdmin, hospitalIds);
+    const summary = await getSummaryForAllHospitals(user.admin, hospitalIds);
 
     return {
       props: {
@@ -702,7 +701,7 @@ export default function Summary({
         <h1 className="text-center mt-4 mb-4">Visualization and Reports</h1>
         <div className="row">
           <div className="col-md-2 ">
-            {(user.admin || user.hospitalRole[0].admin) && (
+            {(user.admin || (user.hospitalRole.length > 0 && user.hospitalRole[0].admin)) && (
               <button
                 onClick={() => router.push("/customizedReport")}
                 className="btn btn-success border-0 btn-block"
@@ -711,7 +710,7 @@ export default function Summary({
               </button>
             )}
           </div>
-          {(user.admin || user.hospitalRole[0].admin) && (
+          {(user.admin || (user.hospitalRole.length > 0 && user.hospitalRole[0].admin)) && (
             <div className="offset-md-8 col-md-2">
               <button
                 className="btn btn-success border-0 btn-block text-align-right"
@@ -723,7 +722,7 @@ export default function Summary({
           )}
         </div>
         <br />
-        {(user.admin || user.hospitalRole[0].admin) && (
+        {(user.admin || (user.hospitalRole.length > 0 && user.hospitalRole[0].admin)) && (
           <div className="row">
             <div className="col-md-3">
               <GraphCustomizer
