@@ -10,7 +10,7 @@ export default async function handler(req, res) {
         data: {
           datetime_recorded: new Date(),
           rating: parseInt(rating),
-          comment: comments,
+          comment: comments || null,
           email: email || null, // Making email optional
         },
       });
