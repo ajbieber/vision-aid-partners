@@ -68,33 +68,19 @@ function RequiredFields(props) {
   const [selectedPost, setSelectedPost] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [userContent, setUserContent] = useState('');
-  const [posts, setUserPosts] = useState('');
+  const [userPosts, setUserPosts] = useState('');
   const sections = ["Hospitals", "Beneficiaries", "Evaluations", "Trainings", "Landing Page"]
 
-  // const posts = [
-  //   { id: 1, title: 'Post 1', content: 'Content 1', date: '2022-03-08' },
-  //   { id: 2, title: 'Post 2', content: 'Content 2', date: '2022-03-09' },
-  //   { id: 3, title: 'Post 3', content: 'Content 3', date: '2022-03-07' },
-  // ];
+  const posts = [
+    { id: 1, title: 'Post 1', content: 'Content 1', date: '2022-03-08' },
+    { id: 2, title: 'Post 2', content: 'Content 2', date: '2022-03-09' },
+    { id: 3, title: 'Post 3', content: 'Content 3', date: '2022-03-07' },
+  ];
 
   const handleShow = () => {
     setShowModal(true);
     setEditMode(false); 
-    e.preventDefault();
-    const response = fetch(url, {
-      method: "GET"
-    });
-    console.log(response)
-    // Handle response from the API
-    if (response.status !== 200) {
-      console.log("something went wrong");
-    } else {
-      setUserPosts(response)
-      console.log("set post successfully !!!");
-    }
-  /// close after sending create
-  handleClose();
-
+      
   };
 
   const handleClose = () => {
@@ -135,7 +121,6 @@ function RequiredFields(props) {
   const handleDelete = (post) => {
     setSelectedPost(post);
     setConfirmDelete(true);
-
   };
 
   const handleSaveChanges = (e) => {
