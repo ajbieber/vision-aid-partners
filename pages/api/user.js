@@ -1,6 +1,5 @@
 import prisma from "client";
 import { ManagementClient } from "auth0";
-import { use } from "react";
 import { getSession } from '@auth0/nextjs-auth0';
 
 const managementClient = new ManagementClient({
@@ -12,8 +11,8 @@ const managementClient = new ManagementClient({
 export default async function handler(req, res) {
   if (req.method === "POST") {
     return await createUser(req, res);
-  } else if (req.method == "GET") {
-    return await readData(req, res);
+  } else if (req.method == "PATCH") {
+    return await updateUser(req, res);
   } else if (req.method == "DELETE") {
     return await deleteUser(req, res);
   } else {
@@ -36,9 +35,7 @@ async function createUser(req, res) {
     email: body.email,
     app_metadata: {
       "va_partners": {
-        hospitalRole: [
-          { hospitalId: 1, admin: body.admin }
-        ],
+        hospitalRole: [],
         admin: body.admin || false,
       }
     },
@@ -61,29 +58,34 @@ async function createUser(req, res) {
   }
 }
 
-async function readData(req, res) {
+/**
+ * Updates a user based on the data passed in. Only updatesa users name, hospitalRole, and admin
+ * status. Does NOT update email or password.
+ * 
+ * @param req 
+ * @param res  
+ */
+async function updateUser(req, res) {
   try {
-    var user;
-    if (req.query.email != null) {
-      user = await readUser(req.query.email);
-    } else if (req.query.hospitalName != null) {
-      getUsersByHospital(req.query.hospitalName);
-    } else {
-      user = await prisma.user.findMany({
-        include: {
-          hospitalRole: true,
-          admin: true,
-        },
-      });
-    }
-    return res.status(200).json(user, { success: true });
-  } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .json({ error: "Error reading from database", success: false });
+    const body = req.body;
+    const updateObject = {
+      name: body.name,
+      app_metadata: {
+        "va_partners": {
+          hospitalRole: body.hospitalRole,
+          admin: body.admin,
+        }
+      }
+    };
+
+    await managementClient.users.update({ id: req.query.id }, updateObject);
+    return res.status(200).end();
+  }
+  catch (error) {
+    return res.status(500).json({ error: `Failed to update user with error: ${error.message}` });
   }
 }
+
 
 export async function getUsersByHospital(hospitalId) {
   const hospital = await prisma.hospitalRole.findMany({
@@ -107,18 +109,6 @@ export async function getUsersByHospital(hospitalId) {
   });
 }
 
-export async function readUser(email) {
-  return prisma.user.findUnique({
-    where: {
-      email: email,
-    },
-    include: {
-      hospitalRole: true,
-      admin: true,
-    },
-  });
-}
-
 /**
  * Retrieves all users from Auth0.
  * @returns {Promise}
@@ -131,6 +121,7 @@ export async function allUsers() {
 
   return results.data.map((user) => {
     return {
+    id: user.user_id,
     email: user.email,
     name: user.name,
     admin: user.app_metadata.va_partners.admin || false,
@@ -148,8 +139,13 @@ export async function allHospitalRoles() {
  * @returns 204 No Content
  */
 async function deleteUser(req, res) {
-  await managementClient.users.delete(req.body.id);
-  return res.status(204);
+  const response = await managementClient.users.delete({ id: req.query.id });
+
+  if (response.status !== 204) {
+    return res.status(response.status).end();
+  }
+  
+  return res.status(204).end();
 }
 
 /**

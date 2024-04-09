@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "test": "jest ./pages/api/__tests__/user.test.js"
+    "test": "jest --runInBand --passWithNoTests"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.2.4",
@@ -25,7 +25,6 @@
     "@prisma/client": "^5.11.0",
     "@tailwindcss/forms": "^0.5.3",
     "auth0": "^4.3.1",
-    "axios": "^1.6.8",
     "bootstrap": "^5.2.3",
     "chart.js": "^4.2.1",
     "framer-motion": "^10.16.4",
