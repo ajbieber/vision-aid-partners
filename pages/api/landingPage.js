@@ -49,6 +49,8 @@ async function readContent(req, res) {
     } else {
       // if no content id provided, return all contents.
       userData =  await prisma.landing_Page.findMany();
+      console.log("...............................................")
+      console.log(userData.length)
     }
     return res.status(200).json(userData);
   } catch (error) {
@@ -61,8 +63,6 @@ async function readContent(req, res) {
 
 
 async function addContent(req, res) {
-  console.log("\n addContent");
-  
   const dt = new Date();
   const body = req.body;
   var abc 
@@ -100,11 +100,16 @@ async function deleteContent(req, res) {
   var userData;
   try {
     if (req.query.id != null || req.query.id != '' ) {
-      userData =  await prisma.landing_Page.delete({
-        where: {
-          id: parseInt(req.query.id),
-        },
-      });
+      if (req.query.action == "clear") {
+        userData =  await prisma.landing_Page.deleteMany()
+      } else {
+        userData =  await prisma.landing_Page.delete({
+          where: {
+            id: parseInt(req.query.id),
+          },
+        });
+      }
+
     } 
     return res.status(200).json(userData);
   } catch (error) {
@@ -125,3 +130,5 @@ async function getUserID(emailAddr) {
   console.log(getUserID)
   return data.id
 }
+
+

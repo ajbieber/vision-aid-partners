@@ -1,13 +1,31 @@
 const apiUrl = 'http://localhost:3000/api/landingPage'; 
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 describe('Landing Page API Tests', () => {
     let uid = 2;
     let id;
+
+
+    beforeAll(async () => {
+        var requestData = {
+            id: id,
+            action: "clear"
+        };
+        const queryString = new URLSearchParams(requestData).toString();
+        // Send a DELETE request to the API endpoint /api/landingPage?id=2
+        const response = await fetch(`${apiUrl}?${queryString}`, { method: "DELETE" });
+        expect(response.status).toBe(200);
+        const responseBody = await response.json();
+        expect(responseBody.id).toBe(id);
+    });
+
     test('should add content successfully', async () => {
         // Mock request body
         const requestBody = {
             userId: uid,
-            content: 'New content'
+            content: 'New content',
+            emailAddr: "visionaidp11ad@gmail.com"
         };
       
         // Send a POST request to the API endpoint
@@ -57,8 +75,14 @@ describe('Landing Page API Tests', () => {
         expect(response.status).toBe(200);
     });
     test('should read all content successfully', async () => {
-        const response = await fetch(`${apiUrl}`, { method: "GET" });
+        var requestData = {
+        };
+        const queryString = new URLSearchParams(requestData).toString();
+        const response = await fetch(`${apiUrl}?${queryString}`);
+        const responseBody = await response.json();
         expect(response.status).toBe(200);
+        expect(responseBody.length).toBe(1)
+        expect(responseBody[0].content).toBe("New updated content")
         // const responseBody = await response.json();
     });
     test('should delete content successfully', async () => {
@@ -73,4 +97,5 @@ describe('Landing Page API Tests', () => {
         const responseBody = await response.json();
         expect(responseBody.id).toBe(id);
     });
+
 });
