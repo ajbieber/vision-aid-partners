@@ -48,7 +48,7 @@ async function readContent(req, res) {
       });
     } else {
       // if no content id provided, return all contents.
-      userData =  await prisma.landing_Page.findMany();
+      userData = await findAllLandingPagePosts();
       console.log("...............................................")
       console.log(userData.length)
     }
@@ -61,11 +61,20 @@ async function readContent(req, res) {
   }
 }
 
+export async function findAllLandingPagePosts() {
+  const posts = await prisma.landing_Page.findMany();
+  return posts.map(post => {
+    return {
+      ...post,
+      creationDate: new Date(post.creationDate).getTime(),
+    };
+  });
+}
+
 
 async function addContent(req, res) {
   const dt = new Date();
   const body = req.body;
-  var abc 
   var uid;
   uid = await getUserID(body.emailAddr)
   .then((d) => {
@@ -128,7 +137,6 @@ async function getUserID(emailAddr) {
       email: emailAddr,
     }
   })
-  console.log(getUserID)
   return data.id
 }
 
