@@ -1496,7 +1496,7 @@ function RequiredFields(props) {
                     </Button>
                   ) : (
                     <Button variant="primary" onClick={handleSaveChanges}>
-                      Save Changes
+                      Create
                     </Button>
                   )}
                 </Modal.Footer>
