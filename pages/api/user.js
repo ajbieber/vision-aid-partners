@@ -119,6 +119,8 @@ export async function allUsers() {
     q: "identities.connection:Username-Password-Authentication"
   });
 
+  console.log(results.data)
+
   return results.data.map((user) => {
     return {
     id: user.user_id,
@@ -126,6 +128,7 @@ export async function allUsers() {
     name: user.name,
     admin: user.app_metadata.va_partners.admin || false,
     hospitalRole: user.app_metadata.va_partners.hospitalRole || [],
+    lastLogin: (user.last_login) ? new Date(user.last_login).getTime() : null
   }});
 }
 

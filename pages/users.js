@@ -393,6 +393,10 @@ export default function Users(props) {
           ? <td>ALL</td>
           : <td>{ u.hospitalRole.map((hosp) => hospitalMapping[hosp.hospitalId].name).join(', ') }</td>
         }
+        { u.lastLogin === null
+          ? <td>Never</td>
+          : <td>{new Date(u.lastLogin).toLocaleTimeString('en-us', { month: 'long', day: 'numeric', year: 'numeric' })}</td>
+        }
         <td>
           <PencilSquare style={{cursor: "pointer"}} onClick={() => handleEditClick(u)} />
           <Tooltip title={(user.admin) ? "" : "Not permitted to delete users"}>
@@ -445,7 +449,7 @@ export default function Users(props) {
                   <h3 className="text-center mt-4 mb-4">
                     <strong>List of Users</strong>
                   </h3>
-                  <Table columns={["Name", "Email", "Admin", "Manager", "Hospital", "Actions"]} rows={tableRows} />
+                  <Table columns={["Name", "Email", "Admin", "Manager", "Hospital", "Last Login", "Actions"]} rows={tableRows} />
                   <div className="row">
                     <div className="col text-end">
                       <button type="button" className="btn btn-success" onClick={handleCreateUserClick}>
