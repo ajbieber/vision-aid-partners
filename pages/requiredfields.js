@@ -68,7 +68,6 @@ function RequiredFields(props) {
   const [selectedPost, setSelectedPost] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [userContent, setUserContent] = useState('');
-  const [userPosts, setUserPosts] = useState('');
   const sections = ["Hospitals", "Beneficiaries", "Evaluations", "Trainings", "Landing Page"]
 
   const posts = [
@@ -131,9 +130,9 @@ function RequiredFields(props) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          emailAddr: document.getElementsByClassName("jsx-db670790b21b4b04 top display text-light").valueOf()[0].innerText.split(': ')[1].split(' (')[0],
+          emailAddr: props.user.email,
           content: userContent,
-          title: title
+          title: title,
         }),
       });
       console.log(response)
