@@ -116,10 +116,15 @@ function RequiredFields(props) {
     }
   };
   
-  const handleDelete = (post) => {
+  const handleClickDelete = (post) => {
     setSelectedPost(post);
     setConfirmDelete(true);
   };
+
+  const handleDelete = async (post) => {
+    await fetch(`${url}?id=${post.id}`, { method: "DELETE" });
+    handleClose();
+  }
 
   const handleCreatePost = (e) => {
       e.preventDefault();
@@ -722,7 +727,7 @@ function RequiredFields(props) {
         <td>{new Date(post.creationDate).toLocaleTimeString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</td>
         <td>
           <PencilSquare style={{cursor: "pointer"}} onClick={() => handleEdit(post)} />
-          <Trash3 color="red" style={{marginLeft: "5px", cursor: "pointer"}} onClick={() => handleDelete(post)} />
+          <Trash3 color="red" style={{marginLeft: "5px", cursor: "pointer"}} onClick={() => handleClickDelete(post)} />
         </td>
       </tr>
     ));
@@ -1507,7 +1512,7 @@ function RequiredFields(props) {
                   <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
                     Cancel
                   </Button>
-                  <Button variant="danger" onClick={() => handleCreatePost(selectedPost)}>
+                  <Button variant="danger" onClick={() => handleDelete(selectedPost)}>
                     Delete
                   </Button>
                 </Modal.Footer>
