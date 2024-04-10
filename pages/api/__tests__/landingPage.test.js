@@ -25,7 +25,8 @@ describe('Landing Page API Tests', () => {
         const requestBody = {
             userId: uid,
             content: 'New content',
-            emailAddr: "visionaidp11ad@gmail.com"
+            emailAddr: "visionaidp11ad@gmail.com",
+            title: "Post 999"
         };
       
         // Send a POST request to the API endpoint

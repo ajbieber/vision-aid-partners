@@ -132,7 +132,8 @@ function RequiredFields(props) {
         },
         body: JSON.stringify({
           emailAddr: document.getElementsByClassName("jsx-db670790b21b4b04 top display text-light").valueOf()[0].innerText.split(': ')[1].split(' (')[0],
-          content: userContent
+          content: userContent,
+          title: title
         }),
       });
       console.log(response)
