@@ -29,7 +29,6 @@ export const getServerSideProps = withPageAuthRequired({
       !user.admin &&
       (user.hospitalRole.length == 0 || user.hospitalRole[0].admin != true)
     ) {
-      console.log("user admin is null or is not a manager of hospital");
       return {
         redirect: {
           destination: "/",
@@ -358,8 +357,6 @@ export default function Users(props) {
         body.hospitalRole.push({ hospitalId: h, admin: hospitalFormData.role === "Manager" });
       }
     });
-
-    console.log(body)
 
     await fetch(`/api/user?id=${user.id}`, {
       method: "PATCH",
