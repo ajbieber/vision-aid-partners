@@ -122,7 +122,7 @@ function RequiredFields(props) {
     setConfirmDelete(true);
   };
 
-  const handleSaveChanges = (e) => {
+  const handleCreatePost = (e) => {
       e.preventDefault();
       const response = fetch(url, {
         method: "POST",
@@ -1495,7 +1495,7 @@ function RequiredFields(props) {
                       Update
                     </Button>
                   ) : (
-                    <Button variant="primary" onClick={handleSaveChanges}>
+                    <Button variant="primary" onClick={handleCreatePost}>
                       Create
                     </Button>
                   )}
@@ -1512,7 +1512,7 @@ function RequiredFields(props) {
                   <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
                     Cancel
                   </Button>
-                  <Button variant="danger" onClick={() => handleSaveChanges(selectedPost)}>
+                  <Button variant="danger" onClick={() => handleCreatePost(selectedPost)}>
                     Delete
                   </Button>
                 </Modal.Footer>
