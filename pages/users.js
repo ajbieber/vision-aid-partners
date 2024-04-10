@@ -289,8 +289,12 @@ export default function Users(props) {
     setEditModalOpen(true);
   }
 
-  const handleDeleteClick = (user) => {
-    setSelectedUser(user);
+  const handleDeleteClick = (userToDelete) => {
+    if (!user.admin) {
+      return;
+    }
+
+    setSelectedUser(userToDelete);
     setDeleteModalOpen(true);
   };
 
@@ -348,10 +352,10 @@ export default function Users(props) {
     hospitals.forEach(h => {
       const indexOfExistingHospital = body.hospitalRole.findIndex(hRole => hRole.hospitalId === h);
       if (indexOfExistingHospital >= 0) {
-        body.hospitalRole[indexOfExistingHospital] = { hospitalId: h, admin: user.admin }
+        body.hospitalRole[indexOfExistingHospital] = { hospitalId: h, admin: hospitalFormData.role === "Manager" }
       }
       else {
-        body.hospitalRole.push({ hospitalId: h, admin: user.admin });
+        body.hospitalRole.push({ hospitalId: h, admin: hospitalFormData.role === "Manager" });
       }
     });
 
@@ -375,23 +379,32 @@ export default function Users(props) {
     hospitalMapping[hospital.id] = hospital;
   });
 
-  const tableRows = users.map((user) => {
+  const tableRows = users.map((u) => {
     return (
-      <tr key={user.email}>
-        <td>{user.name}</td>
-        <td>{user.email}</td>
-        { user.admin
+      <tr key={u.email}>
+        <td>{u.name}</td>
+        <td>{u.email}</td>
+        { u.admin // Admin
           ? <td style={{color: "green"}}>&#10004;</td>
           : <td style={{color: "red"}}>&#10008;</td>
         }
-        <td style={{color: "green"}}>&#10004;</td>
-        { user.admin
+        { u.admin || u.hospitalRole.some(h => h.admin) // Manager
+          ? <td style={{color: "green"}}>&#10004;</td>
+          : <td style={{color: "red"}}>&#10008;</td>
+        }
+        { u.admin
           ? <td>ALL</td>
-          : <td>{ user.hospitalRole.map((hosp) => hospitalMapping[hosp.hospitalId].name).join(', ') }</td>
+          : <td>{ u.hospitalRole.map((hosp) => hospitalMapping[hosp.hospitalId].name).join(', ') }</td>
         }
         <td>
-          <PencilSquare style={{cursor: "pointer"}} onClick={() => handleEditClick(user)} />
-          <Trash3 color="red" style={{marginLeft: "5px", cursor: "pointer"}} onClick={() => handleDeleteClick(user)} />
+          <PencilSquare style={{cursor: "pointer"}} onClick={() => handleEditClick(u)} />
+          <Tooltip title={(user.admin) ? "" : "Not permitted to delete users"}>
+            <Trash3
+              color="red"
+              style={{marginLeft: "5px", cursor: (user.admin) ? "pointer" : "not-allowed"}}
+              onClick={() => handleDeleteClick(u)}
+            />
+          </Tooltip>
         </td>
       </tr>
     );
