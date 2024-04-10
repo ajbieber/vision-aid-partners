@@ -1,33 +1,33 @@
 // This function gets called at build time
-import {readUser} from './api/user'
-import {getSession} from "next-auth/react";
+import { getUserFromSession } from "@/pages/api/user";
 import {readBeneficiaryMirror} from "@/pages/api/beneficiaryMirror";
-import {v4 as uuidv4} from 'uuid';
 import Router from "next/router";
 import {getHospitalRoleByUserId} from "@/pages/api/hospitalRole";
+import { withPageAuthRequired } from '@auth0/nextjs-auth0';
 
 // http://localhost:3000/beneficiaryinformation
-export async function getServerSideProps(ctx) {
-    const session = await getSession(ctx)
-    if (session == null) {
-        console.log("session is null")
-        return {
-            redirect: {
-                destination: '/',
-                permanent: false,
-            },
-        }
+export const getServerSideProps = withPageAuthRequired({
+  async getServerSideProps(ctx) {
+    const user = await getUserFromSession(ctx);
+    if (user === null) {
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        },
+      };
     }
-    const user = await readUser(session.user.email)
-    if (user == null || (user.admin == null && user.hospitalRole == null)) {
-        console.log("user not logged in or admin is not null or added to a hospital")
-        return {
-            redirect: {
-                destination: '/',
-                permanent: false,
-            },
-        }
+
+    if (!user.admin && user.hospitalRole.length === 0) {
+      return {
+        redirect: {
+          destination: '/',
+          permanent: false,
+        },
+      }
     }
+    
+    // TODO: Return a hospital from the user ID in the users hospitalRole
     const hospitalRole = await getHospitalRoleByUserId(user.id)
     var hospital = null
     if (hospitalRole != null) {
@@ -40,7 +40,8 @@ export async function getServerSideProps(ctx) {
             error: null
         },
     }
-}
+  }
+});
 
 function requiredFields(props) {
 
