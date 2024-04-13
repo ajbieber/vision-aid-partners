@@ -13,14 +13,11 @@ function Navigation(props) {
     if (user.admin) {
       role = "admin"
     }
-    else if (user.hospitalRole.length == 0) {
-      role = "professional"
-    }
-    else if (user.hospitalRole[0].admin) {
+    else if (user.hospitalRole.some(h => h.admin)) {
       role = "manager"
     }
     else {
-      role = "invalid"
+      role = "professional"
     }
   }
 

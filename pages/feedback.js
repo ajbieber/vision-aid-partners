@@ -46,10 +46,12 @@ export default function FeedbackPage(props) {
       </Head>
       <div className="content">
         <div className="container feedback-container">
-          <h1 className="text-center mt-4 mb-4">Provide Website Feedback</h1>
           {feedbackSubmitted ? (
-            <p>Thank you for your feedback!</p>
+            <h1 className="text-center mt-4 mb-4">Thank you for your feedback!</h1>
           ) : (
+            <h1 className="text-center mt-4 mb-4">Provide Website Feedback</h1>
+          )}
+          {!feedbackSubmitted && (
             <form id="feedbackForm" onSubmit={handleSubmit}>
               <div>
                 <label htmlFor="rating">Overall Satisfaction:</label><br />

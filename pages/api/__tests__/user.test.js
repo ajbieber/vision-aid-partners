@@ -46,6 +46,7 @@ describe('User API Tests', () => {
   it('should retrieve all the users from Auth0', async () => {
     const usersToGet = [
       {
+        user_id: 'auth0|12345',
         name: 'Test User',
         email: 'testuser123@test.com',
         app_metadata: {
@@ -55,9 +56,11 @@ describe('User API Tests', () => {
               { id: 1, admin: true }
             ]
           }
-        }
+        },
+        last_login: '2024-04-10T20:56:22.456Z'
       },
       {
+        user_id: 'auth0|23456',
         name: 'Test User 2',
         email: 'testuser234@test.com',
         app_metadata: {
@@ -78,20 +81,24 @@ describe('User API Tests', () => {
     const results = await allUsers();
     expect(results).toHaveLength(2);
     expect(results[0]).toEqual({
+      id: 'auth0|12345',
       name: 'Test User',
       email: 'testuser123@test.com',
       admin: true,
       hospitalRole: [
         { id: 1, admin: true }
-      ]
+      ],
+      lastLogin: 1712782582456,
     });
     expect(results[1]).toEqual({
+      id: 'auth0|23456',
       name: 'Test User 2',
       email: 'testuser234@test.com',
       admin: false,
       hospitalRole: [
         { id: 1, admin: false }
-      ]
+      ],
+      lastLogin: null,
     });
   });
 
