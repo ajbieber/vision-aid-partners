@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { findAllHospital } from "@/pages/api/hospital";
 import p1 from 'public/images/collage.webp';
 import { Card, CardContent, Typography, Grid, Button, Avatar } from '@mui/material';
 
@@ -17,22 +16,6 @@ function Post({ title, content, date }) {
 }
 
 function LandingPage(props) {
-
-    // TODO: HOSPITAL SECTION
-    const [hospitals, setHospitals] = useState([]);
-
-    useEffect(() => {
-        async function fetchHospitals() {
-            try {
-                const fetchedHospitals = await findAllHospital();
-                setHospitals(fetchedHospitals);
-            } catch (error) {
-                console.error('Error fetching hospitals:', error);
-            }
-        }
-        fetchHospitals();
-    }, []);
-
     const postsSection = () => {
         const postsSection = document.getElementById('posts-section');
         if (postsSection) {
@@ -196,16 +179,6 @@ function LandingPage(props) {
                         </Typography>
                     </Grid>
                 </Grid>
-            </div>
-            <div>
-                <Typography variant="h4" style={{ marginBottom: '20px' }}>Hospitals</Typography>
-                {hospitals.map((hospital) => (
-                    <Card key={hospital.id} style={{ marginBottom: '20px', backgroundColor: '#C8E6C9' }}>
-                        <CardContent>
-                            <Typography variant="h6">{hospital.name}</Typography>
-                        </CardContent>
-                    </Card>
-                ))}
             </div>
             <div id="posts-section">
                 <br></br>
