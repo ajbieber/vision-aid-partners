@@ -110,9 +110,9 @@ function LandingPage(props) {
                     of resource centers across India and a robust suite of online programs, offers a comprehensive range
                     of devices, training, and services. These initiatives aim to provide holistic vision enhancement and
                     rehabilitation programs for adults and children who are blind or have low vision. Vision Aid Partners include the many
-                    partners we work with including pre-eminent organizations in both India and the United States to realize Vision Aid's mission.
+                    partners we work with including pre-eminent organizations in both India and the United States to realize Vision Aid&apos;s mission.
                 </Typography>
-                
+
                 <Button
                     variant="contained"
                     onClick={postsSection}
@@ -198,16 +198,15 @@ function LandingPage(props) {
                 </Grid>
             </div>
             <div>
-            <Typography variant="h4" style={{ marginBottom: '20px' }}>Hospitals</Typography>
-            // TODO: HOSPITAL SECTION
-            {hospitals.map((hospital) => (
-                <Card key={hospital.id} style={{ marginBottom: '20px', backgroundColor: '#C8E6C9' }}>
-                    <CardContent>
-                        <Typography variant="h6">{hospital.name}</Typography>
-                    </CardContent>
-                </Card>
-            ))}
-        </div>
+                <Typography variant="h4" style={{ marginBottom: '20px' }}>Hospitals</Typography>
+                {hospitals.map((hospital) => (
+                    <Card key={hospital.id} style={{ marginBottom: '20px', backgroundColor: '#C8E6C9' }}>
+                        <CardContent>
+                            <Typography variant="h6">{hospital.name}</Typography>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
             <div id="posts-section">
                 <br></br>
                 <Grid container spacing={2}>
