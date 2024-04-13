@@ -119,11 +119,13 @@ function RequiredFields(props) {
   const handleClickDelete = (post) => {
     setSelectedPost(post);
     setConfirmDelete(true);
+    
   };
 
   const handleDelete = async (post) => {
     await fetch(`${url}?id=${post.id}`, { method: "DELETE" });
     handleClose();
+    Router.reload();
   }
 
   const handleCreatePost = (e) => {
@@ -148,6 +150,7 @@ function RequiredFields(props) {
       }
     /// close after sending create
     handleClose();
+    Router.reload();
   };
 
   function removeExtraField(fieldId) {
