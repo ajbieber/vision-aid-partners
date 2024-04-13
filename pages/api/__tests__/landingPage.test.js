@@ -3,10 +3,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 describe('Landing Page API Tests', () => {
-    let uid = 2;
     let id;
-
-
     beforeAll(async () => {
         var requestData = {
             id: id,
@@ -23,7 +20,6 @@ describe('Landing Page API Tests', () => {
     test('should add content successfully', async () => {
         // Mock request body
         const requestBody = {
-            userId: uid,
             content: 'New content',
             emailAddr: "visionaidp11ad@gmail.com",
             title: "Post 999"
@@ -40,7 +36,6 @@ describe('Landing Page API Tests', () => {
         });
         expect(response.status).toBe(200);
         const responseBody = await response.json();
-        expect(responseBody.userId).toBe(uid);
         expect(responseBody.content).toBe(requestBody.content);
         expect(responseBody.id).toBeDefined();
         id = responseBody.id;
@@ -57,7 +52,6 @@ describe('Landing Page API Tests', () => {
         expect(response.status).toBe(200);
         const responseBody = await response.json();
         expect(responseBody.id).toBe(id);
-        expect(responseBody.userId).toBe(uid);
     });
     test('should update content successfully', async () => {
         const requestBody = {

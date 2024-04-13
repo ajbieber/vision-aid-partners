@@ -65,21 +65,8 @@ async function readContent(req, res) {
 async function addContent(req, res) {
   const dt = new Date();
   const body = req.body;
-  var abc 
-  var uid;
-  uid = await getUserID(body.emailAddr)
-  .then((d) => {
-    return d
-  }).catch((err) => {
-    res.status(500).json({ error: "Failed to get uid" + err, success: false });
-  })
   const create = {
     data: {
-      user: {
-        connect: {
-          id: uid,
-        },
-      },
       content: body.content,
       title: body.title,
       creationDate: dt,
