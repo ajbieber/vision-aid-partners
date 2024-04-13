@@ -19,7 +19,7 @@ export default function SidePanel(props) {
   const inactiveStyle = "btn btn-light btn-block"
 
   return (
-    <div className="container col-md-3 m-4 p-4">
+    <div className="container col-md-2 m-4 p-4">
       { options.map((option, i) => {
         return (
           <div className="p-2" key={i}>

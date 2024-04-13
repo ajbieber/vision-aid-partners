@@ -62,7 +62,7 @@ export default function ReportsHospitalSelection(props) {
           </div>
           <br />
           <br />
-          {user != undefined && (user.admin || user.hospitalRole[0].admin) && (
+          {user != undefined && (user.admin || (user.hospitalRole.length > 0 && user.hospitalRole[0].admin)) && (
             <div>
               <div>
                 <div style={{display: "inline-block"}}>

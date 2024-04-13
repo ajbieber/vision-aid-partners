@@ -1,6 +1,6 @@
 // This function gets called at build time
 import { getUserFromSession } from "@/pages/api/user";
-import { Table } from "react-bootstrap";
+import { Table as BootstrapTable } from "react-bootstrap";
 import { readBeneficiaryMirror } from "@/pages/api/beneficiaryMirror";
 import { v4 as uuidv4 } from "uuid";
 import Router from "next/router";
@@ -18,9 +18,13 @@ import { getCounsellingType } from "@/pages/api/counsellingType";
 import { getTrainingTypes } from "@/pages/api/trainingType";
 import { getTrainingSubTypes } from "@/pages/api/trainingSubType";
 import { Modal, Button, Form } from 'react-bootstrap';
-import { getSession, withPageAuthRequired } from '@auth0/nextjs-auth0';
+import { withPageAuthRequired } from '@auth0/nextjs-auth0';
 import Layout from './components/layout';
 import SidePanel from "./components/SidePanel";
+import { findAllLandingPagePosts } from "./api/landingPage";
+import Table from '@/pages/components/Table';
+import { PencilSquare, Trash3 } from 'react-bootstrap-icons';
+
 
 const url = "/api/landingPage";
 export const getServerSideProps = withPageAuthRequired({
@@ -52,6 +56,7 @@ export const getServerSideProps = withPageAuthRequired({
         trainingTypeList: await getTrainingTypes(),
         trainingSubTypeList: await getTrainingSubTypes(),
         error: null,
+        landingPagePosts: await findAllLandingPagePosts(),
       },
     };
   }
@@ -69,12 +74,6 @@ function RequiredFields(props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [userContent, setUserContent] = useState('');
   const sections = ["Hospitals", "Beneficiaries", "Evaluations", "Trainings", "Landing Page"]
-
-  const posts = [
-    { id: 1, title: 'Post 1', content: 'Content 1', date: '2022-03-08' },
-    { id: 2, title: 'Post 2', content: 'Content 2', date: '2022-03-09' },
-    { id: 3, title: 'Post 3', content: 'Content 3', date: '2022-03-07' },
-  ];
 
   const handleShow = () => {
     setShowModal(true);
@@ -117,10 +116,15 @@ function RequiredFields(props) {
     }
   };
   
-  const handleDelete = (post) => {
+  const handleClickDelete = (post) => {
     setSelectedPost(post);
     setConfirmDelete(true);
   };
+
+  const handleDelete = async (post) => {
+    await fetch(`${url}?id=${post.id}`, { method: "DELETE" });
+    handleClose();
+  }
 
   const handleCreatePost = (e) => {
       e.preventDefault();
@@ -715,6 +719,19 @@ function RequiredFields(props) {
     }
   };
 
+  const landingPageRows = props.landingPagePosts
+    .sort((a, b) => new Date(b.creationDate) - new Date(a.creationDate))
+    .map((post) => (
+      <tr key={post.id}>
+        <td>{post.title}</td>
+        <td>{new Date(post.creationDate).toLocaleTimeString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</td>
+        <td>
+          <PencilSquare style={{cursor: "pointer"}} onClick={() => handleEdit(post)} />
+          <Trash3 color="red" style={{marginLeft: "5px", cursor: "pointer"}} onClick={() => handleClickDelete(post)} />
+        </td>
+      </tr>
+    ));
+
   return (
     <Layout>
     <div className="content">
@@ -755,7 +772,7 @@ function RequiredFields(props) {
                   <strong>Remove Hospital</strong>
                 </h2>
                 <div>
-                  <Table striped bordered hover>
+                  <BootstrapTable striped bordered hover>
                     <thead>
                       <tr>
                         <th>Hospital</th>
@@ -793,7 +810,7 @@ function RequiredFields(props) {
                         </tr>
                       ))}
                     </tbody>
-                  </Table>
+                  </BootstrapTable>
                 </div>
                 <br />
               </div>
@@ -1434,24 +1451,7 @@ function RequiredFields(props) {
                 </div>
                 </div>
                 <br />
-                <div>
-                  {posts
-                    .sort((a, b) => new Date(b.date) - new Date(a.date))
-                    .map((post) => (
-                      <div key={post.id} className="mb-3">
-                        <h3>{post.title}</h3>
-                        <p>{new Date(post.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
-                        <div>
-                          <button className="btn btn-primary me-2" onClick={() => handleEdit(post)}>
-                            Edit
-                          </button>
-                          <button className="btn btn-danger" onClick={() => handleDelete(post)}>
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
+                <Table columns={["Title", "Date", "Actions"]} rows={landingPageRows} />
               <Modal show={showModal} onHide={handleClose} size="lg">
                 <Modal.Header closeButton>
                   <Modal.Title style={{ textAlign: 'left' }}>
@@ -1512,7 +1512,7 @@ function RequiredFields(props) {
                   <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
                     Cancel
                   </Button>
-                  <Button variant="danger" onClick={() => handleCreatePost(selectedPost)}>
+                  <Button variant="danger" onClick={() => handleDelete(selectedPost)}>
                     Delete
                   </Button>
                 </Modal.Footer>
