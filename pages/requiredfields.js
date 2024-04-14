@@ -138,11 +138,12 @@ function RequiredFields(props) {
   };
 
   const handleEditPost = (e) => {
-    // e.preventDefault();
+    e.preventDefault();
+    console.log("\n\n selectedPost", selectedPost)
     // userContent is new content
     if (userContent == "") {
       console.log("\n empty content is not allowed");
-      handleClose();
+      handleClose()
     }
     const editConfirmation = fetch(url, {
       method: "PATCH",
@@ -159,6 +160,7 @@ function RequiredFields(props) {
     }
 
     handleClose();
+    Router.reload()
   };
 
   function removeExtraField(fieldId) {
@@ -1486,7 +1488,7 @@ function RequiredFields(props) {
                       <Form.Control
                         as="textarea"
                         rows={3}
-                        placeholder="Enter content"
+                        placeholder = {...selectedPost, content}
                         value={userContent}
                         onChange={(e) => {
                           setUserContent(e.target.value)
