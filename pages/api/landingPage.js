@@ -16,6 +16,16 @@ export default async function handler(req, res) {
   }
 }
 
+export async function findAllLandingPagePosts() {
+  const posts = await prisma.landing_Page.findMany();
+  return posts.map(post => {
+    return {
+      ...post,
+      creationDate: new Date(post.creationDate).getTime(),
+    };
+  });
+}
+
 async function updateContent(req, res) {
   let  updatedUser
   try {
@@ -36,20 +46,17 @@ async function updateContent(req, res) {
   }
 }
 
+
 async function readContent(req, res) {
   var userData;
-  try { 
-    console.log(req.query)
-    if (req.query.id != null ) {
+  try {
+    if (req.query.id != null || req.query.id != '' ) {
       userData =  await prisma.landing_Page.findFirst({
         where: {
           id: parseInt(req.query.id),
         },
       });
-    } else {
-      // if no content id provided, return all contents.
-      userData =  await prisma.landing_Page.findMany();
-    }
+    } 
     return res.status(200).json(userData);
   } catch (error) {
     console.log(error);
@@ -59,9 +66,7 @@ async function readContent(req, res) {
   }
 }
 
-
 async function addContent(req, res) {
-  console.log("\n addContent");
   const dt = new Date();
   const body = req.body;
   const create = {
@@ -105,4 +110,3 @@ async function deleteContent(req, res) {
       .json({ error: "Error deleting from database", success: false });
   }
 }
-
