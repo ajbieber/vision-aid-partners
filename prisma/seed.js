@@ -225,7 +225,7 @@ async function main() {
     await prisma.landing_Page.create({
         data: {
           id: 1,
-          titile: "post-1",
+          title: "post-1",
           content: "This is some content",
           creationDate: new Date(),
         },
