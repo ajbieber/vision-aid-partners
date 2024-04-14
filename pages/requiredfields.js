@@ -1,6 +1,6 @@
 // This function gets called at build time
 import { getUserFromSession } from "@/pages/api/user";
-import { Table } from "react-bootstrap";
+import { Table as BootstrapTable } from "react-bootstrap";
 import { readBeneficiaryMirror } from "@/pages/api/beneficiaryMirror";
 import { v4 as uuidv4 } from "uuid";
 import Router from "next/router";
@@ -18,11 +18,15 @@ import { getCounsellingType } from "@/pages/api/counsellingType";
 import { getTrainingTypes } from "@/pages/api/trainingType";
 import { getTrainingSubTypes } from "@/pages/api/trainingSubType";
 import { Modal, Button, Form } from 'react-bootstrap';
-import { getSession, withPageAuthRequired } from '@auth0/nextjs-auth0';
+import { withPageAuthRequired } from '@auth0/nextjs-auth0';
 import Layout from './components/layout';
 import SidePanel from "./components/SidePanel";
+import { findAllLandingPagePosts } from "./api/landingPage";
+import Table from '@/pages/components/Table';
+import { PencilSquare, Trash3 } from 'react-bootstrap-icons';
 
 
+const url = "/api/landingPage";
 export const getServerSideProps = withPageAuthRequired({
   async getServerSideProps(ctx) {
     const user = await getUserFromSession(ctx);
@@ -52,6 +56,7 @@ export const getServerSideProps = withPageAuthRequired({
         trainingTypeList: await getTrainingTypes(),
         trainingSubTypeList: await getTrainingSubTypes(),
         error: null,
+        landingPagePosts: await findAllLandingPagePosts(),
       },
     };
   }
@@ -63,48 +68,98 @@ function RequiredFields(props) {
 
   const [showModal, setShowModal] = useState(false);
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
   const [editMode, setEditMode] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
-
+  const [userContent, setUserContent] = useState('');
   const sections = ["Hospitals", "Beneficiaries", "Evaluations", "Trainings", "Landing Page"]
-
-  const posts = [
-    { id: 1, title: 'Post 1', content: 'Content 1', date: '2022-03-08' },
-    { id: 2, title: 'Post 2', content: 'Content 2', date: '2022-03-09' },
-    { id: 3, title: 'Post 3', content: 'Content 3', date: '2022-03-07' },
-  ];
-
+  
   const handleShow = () => {
     setShowModal(true);
-    setEditMode(false);
+    setEditMode(false); 
+      
   };
 
   const handleClose = () => {
     setShowModal(false);
     setConfirmDelete(false);
     setTitle('');
-    setContent('');
+    setUserContent('');
     setSelectedPost(null);
   };
 
-  const handleEdit = (post) => {
+ 
+
+  const handleClickEdit = (post) => {
     setSelectedPost(post);
     setTitle(post.title);
-    setContent(post.content);
+    setUserContent(post.content);
     setShowModal(true);
     setEditMode(true);
+    
   };
 
-  const handleDelete = (post) => {
+  const handleClickDelete = (post) => {
     setSelectedPost(post);
+    setUserContent(post.content);
     setConfirmDelete(true);
+    
   };
 
-  const handleSaveChanges = () => {
-    // Handle saving changes
+  const handleDelete = async (post) => {
+    await fetch(`${url}?id=${post.id}`, { method: "DELETE" });
     handleClose();
+    Router.reload();
+  }
+
+  const handleCreatePost = (e) => {
+      e.preventDefault();
+      const response = fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          emailAddr: props.user.email,
+          content: userContent,
+          title: title,
+        }),
+      });
+      console.log(response)
+      // Handle response from the API
+      if (response.status !== 200) {
+        console.log("something went wrong");
+      } else {
+        console.log("post updated successfully !!!");
+      }
+    /// close after sending create
+    handleClose();
+    Router.reload();
+  };
+
+  const handleEditPost = (e) => {
+    e.preventDefault();
+    // selectedPost is exiting post
+    // userContent is new content
+    if (userContent == "") {
+      console.log("\n empty content is not allowed");
+      handleClose()
+    }
+    const editConfirmation = fetch(url, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: selectedPost.id,
+        content: userContent,
+      }),
+    });
+    if (editConfirmation.status !== 200) {
+      console.log("something went wrong");
+    } else {
+      console.log("post updated successfully !!!");
+    }
+    handleClose();
+    Router.reload()
   };
 
   function removeExtraField(fieldId) {
@@ -495,7 +550,7 @@ function RequiredFields(props) {
   for (const counselingType of props.counselingTypeList) {
     if (foundTypeCounselingOther == false && counselingType == "Other") {
       foundTypeCounselingOther = true;
-      console.log("Do not delete other option");
+      // console.log("Do not delete other option");
       continue;
     }
     removeTypeCounseling.push(
@@ -530,7 +585,7 @@ function RequiredFields(props) {
     );
     if (foundTypeTrainingOther == false && trainingType == "Other") {
       foundTypeTrainingOther = true;
-      console.log("Do not delete other option");
+      // console.log("Do not delete other option");
       continue;
     }
     removeTypeTraining.push(
@@ -573,7 +628,7 @@ function RequiredFields(props) {
       trainingSubType.value == "Other"
     ) {
       foundSubTypeTrainingOther[trainingSubType.trainingType.id] = true;
-      console.log("Do not delete other option");
+      // console.log("Do not delete other option");
       continue;
     }
     removeSubTypeTraining.push(
@@ -676,6 +731,20 @@ function RequiredFields(props) {
     }
   };
 
+  const landingPageRows = props.landingPagePosts
+    .sort((a, b) => new Date(b.creationDate) - new Date(a.creationDate))
+    .map((post) => (
+      <tr key={post.id}>
+        <td>{post.title}</td>
+        <td>{post.content}</td>
+        <td>{new Date(post.creationDate).toLocaleTimeString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</td>
+        <td>
+          <PencilSquare style={{cursor: "pointer"}} onClick={() => handleClickEdit(post)} />
+          <Trash3 color="red" style={{marginLeft: "5px", cursor: "pointer"}} onClick={() => handleClickDelete(post)} />
+        </td>
+      </tr>
+    ));
+
   return (
     <Layout>
     <div className="content">
@@ -716,7 +785,7 @@ function RequiredFields(props) {
                   <strong>Remove Hospital</strong>
                 </h2>
                 <div>
-                  <Table striped bordered hover>
+                  <BootstrapTable striped bordered hover>
                     <thead>
                       <tr>
                         <th>Hospital</th>
@@ -754,7 +823,7 @@ function RequiredFields(props) {
                         </tr>
                       ))}
                     </tbody>
-                  </Table>
+                  </BootstrapTable>
                 </div>
                 <br />
               </div>
@@ -1395,24 +1464,7 @@ function RequiredFields(props) {
                 </div>
                 </div>
                 <br />
-                <div>
-                  {posts
-                    .sort((a, b) => new Date(b.date) - new Date(a.date))
-                    .map((post) => (
-                      <div key={post.id} className="mb-3">
-                        <h3>{post.title}</h3>
-                        <p>{new Date(post.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
-                        <div>
-                          <button className="btn btn-primary me-2" onClick={() => handleEdit(post)}>
-                            Edit
-                          </button>
-                          <button className="btn btn-danger" onClick={() => handleDelete(post)}>
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
+                <Table columns={["Title", "Contnt", "Date", "Actions"]} rows={landingPageRows} />
               <Modal show={showModal} onHide={handleClose} size="lg">
                 <Modal.Header closeButton>
                   <Modal.Title style={{ textAlign: 'left' }}>
@@ -1435,9 +1487,12 @@ function RequiredFields(props) {
                       <Form.Control
                         as="textarea"
                         rows={3}
-                        placeholder="Enter content"
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
+                        placeholder="Enter Content"
+                        value={userContent}
+                        onChange={(e) => {
+                          setUserContent(e.target.value)
+                        }}
+                        
                         style={{ textAlign: 'left' }}
                       />
                     </Form.Group>
@@ -1448,12 +1503,13 @@ function RequiredFields(props) {
                     Close
                   </Button>
                   {editMode ? (
-                    <Button variant="primary" onClick={handleSaveChanges}>
+
+                    <Button variant="primary" onClick={handleEditPost} >
                       Update
                     </Button>
                   ) : (
-                    <Button variant="primary" onClick={handleSaveChanges}>
-                      Save Changes
+                    <Button variant="primary" onClick={handleCreatePost}>
+                      Create
                     </Button>
                   )}
                 </Modal.Footer>
@@ -1469,7 +1525,7 @@ function RequiredFields(props) {
                   <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
                     Cancel
                   </Button>
-                  <Button variant="danger" onClick={() => handleSaveChanges(selectedPost)}>
+                  <Button variant="danger" onClick={() => handleDelete(selectedPost)}>
                     Delete
                   </Button>
                 </Modal.Footer>
