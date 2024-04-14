@@ -21,7 +21,6 @@ describe('Landing Page API Tests', () => {
         // Mock request body
         const requestBody = {
             content: 'New content',
-            emailAddr: "visionaidp11ad@gmail.com",
             title: "Post 999"
         };
       
