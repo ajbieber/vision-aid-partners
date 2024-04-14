@@ -74,7 +74,7 @@ function RequiredFields(props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [userContent, setUserContent] = useState('');
   const sections = ["Hospitals", "Beneficiaries", "Evaluations", "Trainings", "Landing Page"]
-
+  
   const handleShow = () => {
     setShowModal(true);
     setEditMode(false); 
@@ -102,6 +102,7 @@ function RequiredFields(props) {
 
   const handleClickDelete = (post) => {
     setSelectedPost(post);
+    setContent(post.content);
     setConfirmDelete(true);
     
   };
@@ -1487,7 +1488,7 @@ function RequiredFields(props) {
                       <Form.Control
                         as="textarea"
                         rows={3}
-                        placeholder = {...selectedPost, content}
+                        placeholder = {content}
                         value={userContent}
                         onChange={(e) => {
                           setUserContent(e.target.value)
