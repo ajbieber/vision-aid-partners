@@ -89,12 +89,9 @@ function RequiredFields(props) {
     setSelectedPost(null);
   };
 
-  const handleEdit = (post) => {
-    setSelectedPost(post);
-    setTitle(post.title);
-    setContent(post.content);
-    setShowModal(true);
-    setEditMode(true);
+  const handleEditPost = (post) => {
+    console.log("\n\n\n handleEdi \n post -----", post)
+
     
     // const apiUrl = 'http://localhost:3000/api/landingPage'; 
     if (post == "") {
@@ -115,7 +112,16 @@ function RequiredFields(props) {
       console.log("post updated successfully !!!");
     }
   };
-  
+
+  const handleClickEdit = (post) => {
+    setSelectedPost(post);
+    setTitle(post.title);
+    setContent(post.content);
+    setShowModal(true);
+    setEditMode(true);
+    
+  };
+
   const handleClickDelete = (post) => {
     setSelectedPost(post);
     setConfirmDelete(true);
@@ -727,9 +733,10 @@ function RequiredFields(props) {
     .map((post) => (
       <tr key={post.id}>
         <td>{post.title}</td>
+        <td>{post.content}</td>
         <td>{new Date(post.creationDate).toLocaleTimeString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</td>
         <td>
-          <PencilSquare style={{cursor: "pointer"}} onClick={() => handleEdit(post)} />
+          <PencilSquare style={{cursor: "pointer"}} onClick={() => handleClickEdit(post)} />
           <Trash3 color="red" style={{marginLeft: "5px", cursor: "pointer"}} onClick={() => handleClickDelete(post)} />
         </td>
       </tr>
@@ -1454,7 +1461,7 @@ function RequiredFields(props) {
                 </div>
                 </div>
                 <br />
-                <Table columns={["Title", "Date", "Actions"]} rows={landingPageRows} />
+                <Table columns={["Title", "Contnt", "Date", "Actions"]} rows={landingPageRows} />
               <Modal show={showModal} onHide={handleClose} size="lg">
                 <Modal.Header closeButton>
                   <Modal.Title style={{ textAlign: 'left' }}>
@@ -1494,7 +1501,7 @@ function RequiredFields(props) {
                   </Button>
                   {editMode ? (
 
-                    <Button variant="primary">
+                    <Button variant="primary" onClick={handleEditPost} >
                       Update
                     </Button>
                   ) : (
