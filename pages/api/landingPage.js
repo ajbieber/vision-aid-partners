@@ -48,7 +48,7 @@ async function updateContent(req, res) {
 
 async function readContent(req, res) {
   var userData;
-  try {
+  try { 
     console.log(req.query)
     if (req.query.id != null ) {
       userData =  await prisma.landing_Page.findFirst({
@@ -115,3 +115,4 @@ async function deleteContent(req, res) {
       .json({ error: "Error deleting from database", success: false });
   }
 }
+
