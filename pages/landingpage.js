@@ -2,6 +2,18 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import p1 from 'public/images/collage.webp';
 import { Card, CardContent, Typography, Grid, Button, Avatar } from '@mui/material';
+import { findAllLandingPagePosts } from "./api/landingPage";
+import { getUserFromSession } from "@/pages/api/user";
+
+export async function getServerSideProps(ctx) {
+    const user = await getUserFromSession(ctx);
+    return {
+        props: {
+            user: user,
+            landingPageEntries: await findAllLandingPagePosts()
+        }
+    };
+}
 
 function Post({ title, content, date }) {
     return (
@@ -183,23 +195,12 @@ function LandingPage(props) {
             <div id="posts-section">
                 <br></br>
                 <Grid container spacing={2}>
-                    {[...Array(2)].map((_, index) => (
-                        <Grid item xs={6} key={index}>
-                            <Post
-                                title={`Post Title ${index + 1}`}
-                                content={`Post Content ${index + 1}`}
-                                date="March 23, 2024"
-                            />
-                        </Grid>
-                    ))}
-                </Grid>
-                <Grid container spacing={2}>
-                    {[...Array(2)].map((_, index) => (
+                    {(props.landingPageEntries || []).map((post, index) => (
                         <Grid item xs={12} key={index}>
                             <Post
-                                title={`Post Title ${index + 1}`}
-                                content={`Post Content ${index + 1}`}
-                                date="March 23, 2024"
+                                title={post.title}
+                                content={post.content}
+                                date={new Date(post.creationDate).toLocaleTimeString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                             />
                         </Grid>
                     ))}
