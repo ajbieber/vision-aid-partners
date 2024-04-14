@@ -89,29 +89,7 @@ function RequiredFields(props) {
     setSelectedPost(null);
   };
 
-  const handleEditPost = (post) => {
-    console.log("\n\n\n handleEdi \n post -----", post)
-
-    
-    // const apiUrl = 'http://localhost:3000/api/landingPage'; 
-    if (post == "") {
-      console.log("\n empty content is not allowed");
-      return
-    }
-    const addConfirmation = fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: post.id,
-        content: post.content,
-      }),
-    });
-    if (addConfirmation.status !== 200) {
-      console.log("something went wrong");
-    } else {
-      console.log("post updated successfully !!!");
-    }
-  };
+ 
 
   const handleClickEdit = (post) => {
     setSelectedPost(post);
@@ -157,6 +135,30 @@ function RequiredFields(props) {
     /// close after sending create
     handleClose();
     Router.reload();
+  };
+
+  const handleEditPost = (e) => {
+    // e.preventDefault();
+    // userContent is new content
+    if (userContent == "") {
+      console.log("\n empty content is not allowed");
+      handleClose();
+    }
+    const editConfirmation = fetch(url, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: selectedPost.id,
+        content: userContent,
+      }),
+    });
+    if (editConfirmation.status !== 200) {
+      console.log("something went wrong");
+    } else {
+      console.log("post updated successfully !!!");
+    }
+
+    handleClose();
   };
 
   function removeExtraField(fieldId) {
@@ -1485,7 +1487,7 @@ function RequiredFields(props) {
                         as="textarea"
                         rows={3}
                         placeholder="Enter content"
-                        // value={userContent}
+                        value={userContent}
                         onChange={(e) => {
                           setUserContent(e.target.value)
                         }}
