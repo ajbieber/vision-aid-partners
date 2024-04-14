@@ -68,7 +68,6 @@ function RequiredFields(props) {
 
   const [showModal, setShowModal] = useState(false);
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
   const [editMode, setEditMode] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -85,7 +84,7 @@ function RequiredFields(props) {
     setShowModal(false);
     setConfirmDelete(false);
     setTitle('');
-    setContent('');
+    setUserContent('');
     setSelectedPost(null);
   };
 
@@ -94,7 +93,7 @@ function RequiredFields(props) {
   const handleClickEdit = (post) => {
     setSelectedPost(post);
     setTitle(post.title);
-    setContent(post.content);
+    setUserContent(post.content);
     setShowModal(true);
     setEditMode(true);
     
@@ -102,7 +101,7 @@ function RequiredFields(props) {
 
   const handleClickDelete = (post) => {
     setSelectedPost(post);
-    setContent(post.content);
+    setUserContent(post.content);
     setConfirmDelete(true);
     
   };
@@ -1488,7 +1487,7 @@ function RequiredFields(props) {
                       <Form.Control
                         as="textarea"
                         rows={3}
-                        placeholder = {content}
+                        placeholder="Enter Content"
                         value={userContent}
                         onChange={(e) => {
                           setUserContent(e.target.value)
