@@ -139,7 +139,7 @@ function RequiredFields(props) {
 
   const handleEditPost = (e) => {
     e.preventDefault();
-    console.log("\n\n selectedPost", selectedPost)
+    // selectedPost is exiting post
     // userContent is new content
     if (userContent == "") {
       console.log("\n empty content is not allowed");
@@ -158,7 +158,6 @@ function RequiredFields(props) {
     } else {
       console.log("post updated successfully !!!");
     }
-
     handleClose();
     Router.reload()
   };
