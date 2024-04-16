@@ -25,6 +25,8 @@ export default function MyApp({ Component, pageProps }) {
       <Head>
         <title>https://vision-aid-partners-spring-2024.vercel.app/</title>
         <meta name="description" content="vision-aid partners" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#1B5E20" />
       </Head>
       <UserProvider>
         <main className={`${inter.variable} font-sans`}>
