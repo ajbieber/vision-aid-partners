@@ -3,7 +3,7 @@
 Vision Aid Partners is a website used by members of hospitals across the Vision Aid organization to
 manage distribution of Vision Aid products, generate reports and metrics, and track beneficiaries 
 for the organization. Vision Aid is a non-profit based out of India. There main website can be found
-at [https://visionaid.org/].
+at https://visionaid.org/.
 
 ## Local Setup
 
