@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import p1 from 'public/images/collage.webp';
 import { Card, CardContent, Typography, Grid, Button, Avatar } from '@mui/material';
@@ -49,6 +49,15 @@ function LandingPage(props) {
         }
     };
 
+    const [overlapHeight, setOverlapHeight] = useState(0);
+    const overlapRef = useRef(null);
+
+    useEffect(() => {
+        if (overlapRef.current) {
+            setOverlapHeight(overlapRef.current.clientHeight);
+        }
+    }, []);
+
 
     return (
         <div style={{ position: 'relative' }}>
@@ -75,30 +84,33 @@ function LandingPage(props) {
                     variant="h1"
                     style={{
                         position: 'absolute',
-                        top: '10%',
+                        top: '15%',
+                        bottom: `calc(60% + ${overlapHeight}px)`,
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
                         color: 'black',
                         textAlign: 'center',
                         zIndex: 1,
                         fontFamily: 'Arial, sans-serif',
-                        fontSize: '50px',
+                        fontSize: 'clamp(1rem, 5vw, 4rem)',
                     }}
                 >
                     Welcome to Vision Aid Partners
                 </Typography>
                 <Typography
+                    ref={overlapRef}
                     variant="h1"
                     style={{
                         position: 'absolute',
-                        top: '29%',
+                        top: '45%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
                         color: 'black',
                         textAlign: 'center',
                         zIndex: 1,
                         fontFamily: 'Arial, sans-serif',
-                        fontSize: '30px',
+                        fontSize: 'clamp(0.8rem, 3vw, 1.5rem)',
+                        maxWidth: '80%',
                     }}
                 >
                     <a href="https://visionaid.org/" style={{ textDecoration: 'underline', color: 'inherit' }}>Vision-Aid</a> enables, educates, and empowers the visually impaired. Vision-Aid, leveraging its network
@@ -113,13 +125,16 @@ function LandingPage(props) {
                     onClick={postsSection}
                     style={{
                         zIndex: 1,
-                        left: '45%',
+                        left: '50%',
                         position: 'absolute',
-                        bottom: '50%',
+                        bottom: '30%',
+                        transform: 'translateX(-50%)',
                         backgroundColor: '#205c24',
                         color: 'white',
                         borderRadius: 20,
                         padding: '10px 20px',
+                        fontSize: 'clamp(0.8rem, 2vw, 1rem)',
+                        minWidth: '200px',
                     }}
                 >
                     Go to posts
@@ -130,13 +145,16 @@ function LandingPage(props) {
                     onClick={stakeholdersSection}
                     style={{
                         zIndex: 1,
-                        left: '43%',
+                        left: '50%',
                         position: 'absolute',
-                        bottom: '43%',
+                        bottom: '20%',
+                        transform: 'translateX(-50%)',
                         backgroundColor: '#205c24',
                         color: 'white',
                         borderRadius: 20,
                         padding: '10px 20px',
+                        fontSize: 'clamp(0.8rem, 2vw, 1rem)',
+                        minWidth: '200px',
                     }}
                 >
                     Vision-Aid Stakeholders
@@ -147,13 +165,16 @@ function LandingPage(props) {
                     onClick={storiesSection}
                     style={{
                         zIndex: 1,
-                        left: '45%',
+                        left: '50%',
                         position: 'absolute',
-                        bottom: '35%',
+                        bottom: '10%',
+                        transform: 'translateX(-50%)',
                         backgroundColor: '#205c24',
                         color: 'white',
                         borderRadius: 20,
                         padding: '10px 20px',
+                        fontSize: 'clamp(0.8rem, 2vw, 1rem)',
+                        minWidth: '200px',
                     }}
                 >
                     More stories!
