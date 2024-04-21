@@ -38,7 +38,12 @@ pnpm dev
 ```
 
 ### Environment Variables
-The environment variables are setup using .env file. For authentication, add your keys/secrets values.
+The environment variables are setup using .env file.  
+Add your secret/key values to `.env_` file. And then rename the file to `.env`
+
+```
+mv .env_ .env
+```
 
 ## Architecture
 
