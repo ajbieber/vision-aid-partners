@@ -81,28 +81,11 @@ function LandingPage(props) {
                     alt=""
                 />
                 <Typography
-                    variant="h1"
-                    style={{
-                        position: 'absolute',
-                        top: '15%',
-                        bottom: `calc(60% + ${overlapHeight}px)`,
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        color: 'black',
-                        textAlign: 'center',
-                        zIndex: 1,
-                        fontFamily: 'Arial, sans-serif',
-                        fontSize: 'clamp(1rem, 5vw, 4rem)',
-                    }}
-                >
-                    Welcome to Vision Aid Partners
-                </Typography>
-                <Typography
                     ref={overlapRef}
                     variant="h1"
                     style={{
                         position: 'absolute',
-                        top: '45%',
+                        top: '35%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
                         color: 'black',
@@ -119,66 +102,6 @@ function LandingPage(props) {
                     rehabilitation programs for adults and children who are blind or have low vision. Vision Aid Partners include the many
                     partners we work with including pre-eminent organizations in both India and the United States to realize Vision Aid&apos;s mission.
                 </Typography>
-
-                <Button
-                    variant="contained"
-                    onClick={postsSection}
-                    style={{
-                        zIndex: 1,
-                        left: '50%',
-                        position: 'absolute',
-                        bottom: '30%',
-                        transform: 'translateX(-50%)',
-                        backgroundColor: '#205c24',
-                        color: 'white',
-                        borderRadius: 20,
-                        padding: '10px 20px',
-                        fontSize: 'clamp(0.8rem, 2vw, 1rem)',
-                        minWidth: '200px',
-                    }}
-                >
-                    Go to posts
-                </Button>
-
-                <Button
-                    variant="contained"
-                    onClick={stakeholdersSection}
-                    style={{
-                        zIndex: 1,
-                        left: '50%',
-                        position: 'absolute',
-                        bottom: '20%',
-                        transform: 'translateX(-50%)',
-                        backgroundColor: '#205c24',
-                        color: 'white',
-                        borderRadius: 20,
-                        padding: '10px 20px',
-                        fontSize: 'clamp(0.8rem, 2vw, 1rem)',
-                        minWidth: '200px',
-                    }}
-                >
-                    Vision-Aid Stakeholders
-                </Button>
-
-                <Button
-                    variant="contained"
-                    onClick={storiesSection}
-                    style={{
-                        zIndex: 1,
-                        left: '50%',
-                        position: 'absolute',
-                        bottom: '10%',
-                        transform: 'translateX(-50%)',
-                        backgroundColor: '#205c24',
-                        color: 'white',
-                        borderRadius: 20,
-                        padding: '10px 20px',
-                        fontSize: 'clamp(0.8rem, 2vw, 1rem)',
-                        minWidth: '200px',
-                    }}
-                >
-                    More stories!
-                </Button>
 
             </div>
             <div id="stakeholders-section">
@@ -234,7 +157,7 @@ function LandingPage(props) {
                     <a href="https://visionaid.org/news/report-on-visit-to-vision-aid-resource-center-pune-on-march-2nd-2024/" style={{ textDecoration: 'underline', color: 'inherit' }}>Report on Visit to Vision-Aid Resource Center, Pune on March 2nd, 2024</a>
                 </Typography>
                 <Typography variant="h6" style={{ marginBottom: '20px' }}>
-                    <a href="https://visionaid.org/news/celebrating-low-vision-awareness-month-at-vision-aid/" style={{ textDecoration: 'underline', color: 'inherit' }}>Celebrating Low Vision Awareness Month at Vision-Aid</a>
+                    <a href="https://visionaid.org/news/empowering-youth-highlights-of-summer-camp-2024/" style={{ textDecoration: 'underline', color: 'inherit' }}>Empowering Youth: Highlights of Summer Camp 2024</a>
                 </Typography>
             </div>
         </div>
