@@ -85,7 +85,7 @@ function LandingPage(props) {
                     variant="h1"
                     style={{
                         position: 'absolute',
-                        top: '35%',
+                        top: '20%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
                         color: 'black',
