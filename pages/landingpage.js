@@ -28,34 +28,20 @@ function Post({ title, content, date }) {
 }
 
 function LandingPage(props) {
-    const postsSection = () => {
-        const postsSection = document.getElementById('posts-section');
-        if (postsSection) {
-            postsSection.scrollIntoView({ behavior: 'smooth' });
-        }
-    };
-
-    const stakeholdersSection = () => {
-        const stakeholdersSection = document.getElementById('stakeholders-section');
-        if (stakeholdersSection) {
-            stakeholdersSection.scrollIntoView({ behavior: 'smooth' });
-        }
-    };
-
-    const storiesSection = () => {
-        const storiesSection = document.getElementById('stories-section');
-        if (storiesSection) {
-            storiesSection.scrollIntoView({ behavior: 'smooth' });
-        }
-    };
-
-    const [overlapHeight, setOverlapHeight] = useState(0);
     const overlapRef = useRef(null);
 
     useEffect(() => {
-        if (overlapRef.current) {
-            setOverlapHeight(overlapRef.current.clientHeight);
-        }
+        const handleResize = () => {
+            if (overlapRef.current) {
+                const isLandscape = window.matchMedia("(orientation: landscape)").matches;
+                overlapRef.current.style.top = isLandscape ? '10%' : '20%';
+            }
+        };
+
+        handleResize(); // Initial call to set the initial value
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
 
 
@@ -85,9 +71,8 @@ function LandingPage(props) {
                     variant="h1"
                     style={{
                         position: 'absolute',
-                        top: '20%',
                         left: '50%',
-                        transform: 'translate(-50%, -50%)',
+                        transform: 'translateX(-50%)',
                         color: 'black',
                         textAlign: 'center',
                         zIndex: 1,
