@@ -42,7 +42,7 @@ The environment variables are setup using .env file.
 Add your secret/key values to `.env_` file. And then rename the file to `.env`
 
 ```
-mv .env_ .env
+mv ._env_ .env
 ```
 
 ## Architecture
