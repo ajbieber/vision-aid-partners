@@ -7,11 +7,43 @@ at https://visionaid.org/.
 
 ## Local Setup
 
-NASA PUT THE SETUP CONTENT HERE
+### Run mysql server
+`docker compose up -d --force-recreate`
+
+### Build Schema 
+`npx prisma migrate dev`
+
+### Seed the data
+`npx prisma db seed`
+
+### Update tables
+Legacy Authentication uses two related tables. To be able to use it with your value of email address, 
+update the Users and Admin table.
+
+```
+INSERT INTO User (email) VALUES (<your_email_address>);
+INSERT INTO Admin (userId) VALUES (<id from User table above>);
+```
+### Install required packages/modules
+`npm install`
+
+### Run server in dev mode
+
+```
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+```
 
 ### Environment Variables
+The environment variables are setup using .env file.  
+Add your secret/key values to `.env_` file. And then rename the file to `.env`
 
-NASA MORE CONTENT HERE
+```
+mv ._env_ .env
+```
 
 ## Architecture
 
