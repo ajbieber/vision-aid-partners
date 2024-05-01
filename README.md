@@ -8,7 +8,7 @@ at https://visionaid.org/.
 ## Local Setup
 
 ### Run mysql server
-``docker compose up -d --force-recreate`
+`docker compose up -d --force-recreate`
 
 ### Build Schema 
 `npx prisma migrate dev`
