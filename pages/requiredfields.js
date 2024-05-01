@@ -21,7 +21,7 @@ import { Modal, Button, Form } from 'react-bootstrap';
 import { withPageAuthRequired } from '@auth0/nextjs-auth0';
 import Layout from './components/layout';
 import SidePanel from "./components/SidePanel";
-import { findAllLandingPagePosts } from "./api/landingPage";
+// import { findAllLandingPagePosts } from "./api/landingPage";
 import Table from '@/pages/components/Table';
 import { PencilSquare, Trash3 } from 'react-bootstrap-icons';
 

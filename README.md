@@ -41,3 +41,5 @@ For linting, only errors in the linter will stop the Linter action from passing.
 that you work to eliminate any warnings too; it's simply good practice and often more efficient to
 address the warnings.
 
+# Landing Page
+- Code for landingPage is in git branch "ldgPage"
