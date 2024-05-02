@@ -1,7 +1,7 @@
 import { Inter } from "next/font/google";
 import Navigation from "./navigation/Navigation";
 import Layout from './components/layout';
-import  LandingPage from "./landingpage.js";
+// import  LandingPage from "./landingpage.js";
 import { useUser } from '@auth0/nextjs-auth0/client';
 
 const inter = Inter({ subsets: ["latin"] });
@@ -33,7 +33,7 @@ export default function Home(props) {
       {!formattedUser || (userIsNotAdmin && userHasNoRoles) && (
         <strong>Please ask an admin to add you as user!</strong>
       )}
-      <LandingPage user={formattedUser}></ LandingPage>
+      {/* <LandingPage user={formattedUser}></ LandingPage> */}
     </Layout>
   );
 }
