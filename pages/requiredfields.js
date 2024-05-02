@@ -56,7 +56,7 @@ export const getServerSideProps = withPageAuthRequired({
         trainingTypeList: await getTrainingTypes(),
         trainingSubTypeList: await getTrainingSubTypes(),
         error: null,
-        landingPagePosts: await findAllLandingPagePosts(),
+        // landingPagePosts: await findAllLandingPagePosts(),
       },
     };
   }
